@@ -12,6 +12,5 @@ admin.site.register(models.EasySudokuTime)
 admin.site.register(models.QueryShorthands)
 
 admin.site.register(models.Item)
-admin.site.register(models.ItemOwnership)
 admin.site.register(models.Hat)
-admin.site.register(models.Crate)
+admin.site.register(models.ItemOwnershipRecord)
