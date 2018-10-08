@@ -3,8 +3,7 @@ import requests
 
 import crossbot.models as models
 
-admin.site.register(models.MyUser)
-admin.site.register(models.SlackUser)
+admin.site.register(models.CBUser)
 
 admin.site.register(models.MiniCrosswordTime)
 admin.site.register(models.CrosswordTime)
