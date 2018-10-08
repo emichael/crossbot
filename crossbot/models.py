@@ -4,9 +4,8 @@ from django.contrib.auth.models import User
 
 import crossbot.slack
 
-
+# Why are you trying to proxy User from auth? I don't think we want Django-admin users do we?
 class MyUser(User):
-
     class Meta:
         proxy = True
 
@@ -23,6 +22,7 @@ class SlackUser(models.Model):
     slackname = models.CharField(max_length=100)
     user = models.ForeignKey(MyUser, null=True, on_delete=models.SET_NULL)
 
+    # Why is this here? Shouldn't we just create users on the fly?
     @classmethod
     def update_all_from_slack(cls):
         users = crossbot.slack.slack_users()
@@ -79,3 +79,28 @@ class QueryShorthands(models.Model):
 
     def __str__(self):
         return '{} - {}'.format(self.name, self.user)
+
+
+################################################################################
+# Items and inventory system
+################################################################################
+
+class Item(models.Model):
+    name = models.CharField(max_length=100, primary_key=True)
+    emoji_str = models.CharField(max_length=100)
+    droppable = models.BooleanField(default=True)
+    rarity = models.IntegerField()
+
+class Hat(Item):
+    pass
+
+class Crate(Item):
+    pass
+
+class Key(Item):
+    pass
+
+class ItemOwnership(models.Model):
+    owner = models.ForeignKey(MyUser, models.CASCADE)
+    item = models.ForeignKey(Item, models.CASCADE)
+    quantity = models.IntegerField()
