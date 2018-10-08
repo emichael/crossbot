@@ -9,7 +9,7 @@ admin.site.register(models.MiniCrosswordTime)
 admin.site.register(models.CrosswordTime)
 admin.site.register(models.EasySudokuTime)
 
-admin.site.register(models.QueryShorthands)
+admin.site.register(models.QueryShorthand)
 
 admin.site.register(models.Item)
 admin.site.register(models.Hat)

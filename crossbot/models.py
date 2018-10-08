@@ -23,6 +23,10 @@ class CBAuthUser(User):
 
 class CBUser(models.Model):
     """Main user model used by the rest of the app."""
+    class Meta:
+        verbose_name = "CBUser"
+        verbose_name_plural = "CBUsers"
+
     slackid = models.CharField(max_length=10, primary_key=True)
     slackname = models.CharField(max_length=100, blank=True)
 
@@ -79,7 +83,7 @@ class MiniCrosswordModel(models.Model):
     prediction = models.IntegerField()
     residual = models.FloatField()
 
-class ModelUsers(models.Model):
+class ModelUser(models.Model):
     class Meta:
         managed = False
         db_table = 'model_users'
@@ -90,7 +94,7 @@ class ModelUsers(models.Model):
     skill_25 = models.FloatField()
     skill_75 = models.FloatField()
 
-class ModelDates(models.Model):
+class ModelDate(models.Model):
     class Meta:
         managed = False
         db_table = 'model_dates'
@@ -104,6 +108,7 @@ class ModelParams(models.Model):
     class Meta:
         managed = False
         db_table = 'model_params'
+        verbose_name_plural = "ModelParams"
 
     time = models.FloatField()
     time_25 = models.FloatField()
@@ -124,7 +129,7 @@ class ModelParams(models.Model):
     when_run = models.FloatField()
 
 
-class QueryShorthands(models.Model):
+class QueryShorthand(models.Model):
     user = models.ForeignKey(CBUser, null=True, on_delete=models.SET_NULL)
     name = models.CharField(max_length=100)
     command = models.TextField()
