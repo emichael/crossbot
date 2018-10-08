@@ -2,10 +2,16 @@
 
 from django.contrib.auth.models import User
 from django.db import models
+from solo.models import SingletonModel
 
 
-class _CBAuthUser(User):
-    """Simple proxy to underlying auth users."""
+class CrossbotSettings(SingletonModel):
+    """Crossbot settings, editable through the admin interface."""
+    item_drop_rate = models.FloatField(default=0.1)
+
+
+class CBAuthUser(User):
+    """Simple proxy to underlying auth users, not used directly."""
     class Meta:
         proxy = True
 
@@ -20,7 +26,7 @@ class CBUser(models.Model):
     slackid = models.CharField(max_length=10, primary_key=True)
     slackname = models.CharField(max_length=100, blank=True)
 
-    auth_user = models.OneToOneField(_CBAuthUser, null=True,
+    auth_user = models.OneToOneField(CBAuthUser, null=True,
                                      on_delete=models.SET_NULL,
                                      related_name='cb_user')
 
@@ -81,13 +87,7 @@ class Item(models.Model):
 class Hat(Item):
     pass
 
-class Crate(Item):
-    pass
-
-class Key(Item):
-    pass
-
-class ItemOwnership(models.Model):
+class ItemOwnershipRecord(models.Model):
     owner = models.ForeignKey(CBUser, models.CASCADE)
     item = models.ForeignKey(Item, models.CASCADE)
     quantity = models.IntegerField()
