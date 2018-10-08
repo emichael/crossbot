@@ -68,6 +68,62 @@ class EasySudokuTime(CommonTime):
     pass
 
 
+class MiniCrosswordModel(models.Model):
+    class Meta:
+        managed = False
+        db_table = 'mini_crossword_model'
+        unique_together = (('userid', 'date'),)
+
+    userid = models.TextField()
+    date = models.IntegerField()
+    prediction = models.IntegerField()
+    residual = models.FloatField()
+
+class ModelUsers(models.Model):
+    class Meta:
+        managed = False
+        db_table = 'model_users'
+
+    uid = models.TextField(unique=True)
+    nth = models.IntegerField()
+    skill = models.FloatField()
+    skill_25 = models.FloatField()
+    skill_75 = models.FloatField()
+
+class ModelDates(models.Model):
+    class Meta:
+        managed = False
+        db_table = 'model_dates'
+
+    date = models.IntegerField()
+    difficulty = models.FloatField()
+    difficulty_25 = models.FloatField()
+    difficulty_75 = models.FloatField()
+
+class ModelParams(models.Model):
+    class Meta:
+        managed = False
+        db_table = 'model_params'
+
+    time = models.FloatField()
+    time_25 = models.FloatField()
+    time_75 = models.FloatField()
+    satmult = models.FloatField()
+    satmult_25 = models.FloatField()
+    satmult_75 = models.FloatField()
+    bgain = models.FloatField()
+    bgain_25 = models.FloatField()
+    bgain_75 = models.FloatField()
+    bdecay = models.FloatField()
+    bdecay_25 = models.FloatField()
+    bdecay_75 = models.FloatField()
+    skill_dev = models.FloatField()
+    date_dev = models.FloatField()
+    sigma = models.FloatField()
+    lp = models.FloatField()
+    when_run = models.FloatField()
+
+
 class QueryShorthands(models.Model):
     user = models.ForeignKey(CBUser, null=True, on_delete=models.SET_NULL)
     name = models.CharField(max_length=100)
