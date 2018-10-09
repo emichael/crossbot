@@ -10,6 +10,7 @@ import crossbot
 from crossbot.parser import date_fmt
 
 from django.utils import timezone
+from django.db import transaction
 from django.db.utils import IntegrityError
 
 
@@ -40,8 +41,12 @@ def add(request):
     args = request.args
 
     try:
-        time = args.table(user = request.user, date = args.date, seconds = args.time)
-        time.save()
+        # we have to wrap this in a new transaction, otherwise the implicit
+        # transaction we are in will be closed upon error, and then we couldn't
+        # make a query in the except case.
+        with transaction.atomic():
+            time = args.table(user = request.user, date = args.date, seconds = args.time)
+            time.save()
     except IntegrityError:
         time = args.table.objects.get(user = request.user, date = args.date)
 
