@@ -40,6 +40,18 @@ class CBUser(models.Model):
                 slackid=slackid, defaults={'slackname': slackname})[0]
         return cls.objects.get_or_create(slackid=slackid)[0]
 
+    @classmethod
+    def update_slacknames(cls):
+        from crossbot.slack import slack_users
+
+        users = {
+            u['id']: u for u in slack_users()
+        }
+
+        for user in cls.objects.all():
+            user.slackname = users[user.slackid]['name']
+            user.save()
+
     def add_crossbucks(self, amount):
         """Add crossbucks to a user's account."""
         self.crossbucks += amount
