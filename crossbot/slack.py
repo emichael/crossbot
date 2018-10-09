@@ -89,4 +89,4 @@ class SlackEventRequest:
 
     # note, this one is not delayed
     def message_and_react(self, msg, emoji):
-        react(emoji, self.channel, timestamp)
+        react(emoji, self.channel, self.timestamp)
