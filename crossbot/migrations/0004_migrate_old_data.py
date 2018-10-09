@@ -10,7 +10,7 @@ TIME_MODELS = ['CrosswordTime', 'MiniCrosswordTime', 'EasySudokuTime']
 def make_users(apps, schema_editor):
     CBUser = apps.get_model('crossbot', 'CBUser')
 
-    for model_name in TIME_MODELS:
+    for model_name in TIME_MODELS + ['QueryShorthands']:
         for item in apps.get_model('crossbot', model_name).objects.all():
             CBUser(slackid=item.userid, slackname='').save()
 
