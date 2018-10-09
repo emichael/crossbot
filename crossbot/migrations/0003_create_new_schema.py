@@ -68,14 +68,14 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=100, primary_key=True, serialize=False)),
                 ('emoji_str', models.CharField(max_length=100)),
                 ('droppable', models.BooleanField(default=True)),
-                ('rarity', models.IntegerField()),
+                ('rarity', models.FloatField(default=1.0)),
             ],
         ),
         migrations.CreateModel(
             name='ItemOwnershipRecord',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('quantity', models.IntegerField()),
+                ('quantity', models.IntegerField(default=0)),
             ],
         ),
         migrations.CreateModel(
@@ -159,6 +159,10 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name='tempcrosswordtime',
             unique_together={('user', 'date')},
+        ),
+        migrations.AlterUniqueTogether(
+            name='itemownershiprecord',
+            unique_together={('owner', 'item')},
         ),
         migrations.AddField(
             model_name='cbuser',

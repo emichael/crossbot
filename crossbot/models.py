@@ -1,8 +1,14 @@
 """Crossbot Django models."""
 
+import random
+
+from datetime import datetime
+
 from django.contrib.auth.models import User
 from django.db import models
 from solo.models import SingletonModel
+
+from crossbot.settings import CROSSBUCKS_PER_SOLVE
 
 
 class CrossbotSettings(SingletonModel):
@@ -25,6 +31,64 @@ class CBUser(models.Model):
 
     hat = models.ForeignKey('Hat', null=True, on_delete=models.SET_NULL)
     crossbucks = models.IntegerField(default=0)
+
+    def add_crossbucks(self, amount):
+        """Add crossbucks to a user's account."""
+        self.crossbucks += amount
+        self.save()
+
+    def add_item(self, item, amount=1):
+        """Add an item to this user's inventory.
+
+        Args:
+            item: An Item object.
+            amount: An integer.
+        """
+        assert isinstance(item, Item)
+
+        record = ItemOwnershipRecord.get_or_create(owner=self, item=item)
+        record.quantity += 1
+        record.save()
+
+    def add_time(self, time_model, seconds, date):
+        """Add a time for this user for the given date.
+
+        Args:
+            time_model: Reference to the subclass of CommonTime to add.
+            seconds: An integer representing the seconds taken, -1 if user
+                failed to solve.
+            date: The date of the puzzle.
+
+        Returns:
+            A 3-tuple, (was_added, crossbucks_earned, item_dropped), where
+            was_added denotes whether or not the time was successfully added,
+            crossbucks_earned is the number of crossbucks earned for this solve,
+            and item_dropped is a reference to the Item object the user found
+            (or None if there wasn't a drop).
+        """
+        assert isinstance(time_model, CommonTime)
+        assert isinstance(seconds, int)
+        assert isinstance(date, datetime.date)
+
+        if time_model.objects.filter(user=self, date=date).exists():
+            return (False, 0, None)
+
+        time_model.create(user=self, seconds=seconds, date=date)
+
+        if seconds == -1:
+            crossbucks_earned = 0
+            item = None
+        else:
+            crossbucks_earned = CROSSBUCKS_PER_SOLVE
+            self.crossbucks += crossbucks_earned
+            self.save()
+
+            item = Item.choose_droppable()
+
+            if item:
+                self.add_item(item)
+
+        return (True, crossbucks_earned, item)
 
     def __str__(self):
         return str(self.slackname if self.slackname else self.slackid)
@@ -133,12 +197,41 @@ class Item(models.Model):
     name = models.CharField(max_length=100, primary_key=True)
     emoji_str = models.CharField(max_length=100)
     droppable = models.BooleanField(default=True)
-    rarity = models.IntegerField()
+    rarity = models.FloatField(default=1.0)
+
+    @classmethod
+    def choose_droppable(cls):
+        """Drop a randomly chosen Item from this class, or None.
+
+        First, selects whether or not to drop a randomly chosen Item based on
+        the global drop rate, then selects from all droppable items weighted by
+        their rarity.
+
+        Does not create an ownership record.
+
+        Returns:
+            An Item or None.
+        """
+        if random.random() > CrossbotSettings.get_solo().item_drop_rate:
+            return None
+
+        droppables = cls.objects.filter(droppable=True)
+
+        if not droppables.exists():
+            return None
+
+        return random.choices(droppables, [item.rarity for item in droppables])
+
+    def __str__(self):
+        return self.name
 
 class Hat(Item):
     pass
 
 class ItemOwnershipRecord(models.Model):
+    class Meta:
+        unique_together = (('owner', 'item'),)
+
     owner = models.ForeignKey(CBUser, models.CASCADE)
     item = models.ForeignKey(Item, models.CASCADE)
-    quantity = models.IntegerField()
+    quantity = models.IntegerField(default=0)
