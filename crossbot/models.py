@@ -47,7 +47,7 @@ class CBUser(models.Model):
         assert isinstance(item, Item)
 
         record = ItemOwnershipRecord.get_or_create(owner=self, item=item)
-        record.quantity += 1
+        record.quantity += amount
         record.save()
 
     def add_time(self, time_model, seconds, date):
