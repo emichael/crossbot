@@ -107,15 +107,16 @@ class SlackAppTests(PatchingTestCase):
                                     HTTP_X_SLACK_SIGNATURE=b'')
         self.assertEqual(response.status_code, 400)
 
-    def slack_post(self, text):
+    def slack_post(self, text, who='alice'):
+
         return self.post_valid_request({
             'type': 'event_callback',
             'text': text,
             'response_url': 'foobar',
             'trigger_id': 'foobar',
             'channel_id': 'foobar',
-            'user_id': 'UALICE',
-            'user_name': '@alice',
+            'user_id': 'U' + who.upper(),
+            'user_name': '@' + who,
         })
 
     def test_add(self):
@@ -153,3 +154,19 @@ class SlackAppTests(PatchingTestCase):
 
         # make sure the original time was preserved
         self.assertEqual(times[0].seconds, 10)
+
+    def test_times(self):
+        self.slack_post('add :15 2018-08-01', who='alice')
+        self.slack_post('add :40 2018-08-01', who='bob')
+
+        # check date parsing here too
+        response = self.slack_post('times 2018-8-1')
+        body = json.loads(response.content)
+
+        self.assertEqual(body['response_type'], 'ephemeral')
+
+        lines = body['text'].split('\n')
+
+        # line 0 is date, line 1 should be alice
+        self.assertIn('alice', lines[1])
+        self.assertIn(':fire:', lines[1])
