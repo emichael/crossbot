@@ -24,11 +24,13 @@ class CBUser(models.Model):
     slackid = models.CharField(max_length=10, primary_key=True)
     slackname = models.CharField(max_length=100, blank=True)
 
-    auth_user = models.OneToOneField(User, null=True,
+    auth_user = models.OneToOneField(User,
+                                     null=True,
+                                     blank=True,
                                      on_delete=models.SET_NULL,
                                      related_name='cb_user')
 
-    hat = models.ForeignKey('Hat', null=True, on_delete=models.SET_NULL)
+    hat = models.ForeignKey('Hat', null=True, blank=True, on_delete=models.SET_NULL)
     crossbucks = models.IntegerField(default=0)
 
     @classmethod
