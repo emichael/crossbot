@@ -76,6 +76,7 @@ class CBUser(models.Model):
         except time_model.DoesNotExist:
             return None
 
+    # TODO: wrap this and other operations in transactions???
     def add_time(self, time_model, seconds, date):
         """Add a time for this user for the given date.
 
