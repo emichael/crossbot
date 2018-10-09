@@ -3,16 +3,15 @@ import hmac
 import json
 import time
 
-from datetime import date
 from unittest.mock import patch, MagicMock
 
-from django.db import transaction
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.urls import reverse
-from django.utils import timezone
 
-from crossbot.models import MiniCrosswordTime, CBUser
+from crossbot import date
+from crossbot.models import CBUser
+from crossbot.settings import CROSSBUCKS_PER_SOLVE
 from crossbot.views import slash_command
 
 # Create your tests here.
@@ -26,9 +25,57 @@ class PatchingTestCase(TestCase):
 
 class ModelTests(TestCase):
 
-    def test_something(self):
-        pass
+    def test_add_user(self):
+        alice = CBUser.from_slackid('UALICE', 'alice')
+        self.assertIsInstance(alice, CBUser)
+        self.assertEqual(alice, CBUser.from_slackid('UALICE', 'bob'))
+        alice = CBUser.from_slackid('UALICE')
+        self.assertEqual(CBUser.from_slackid('UALICE').slackname, 'bob')
 
+    def test_add_time(self):
+        alice = CBUser.from_slackid('UALICE', 'alice')
+        self.assertEqual(alice.crossbucks, 0)
+
+        a, t, cb, i = alice.add_mini_crossword_time(10, date(None))
+        self.assertTrue(a)
+        self.assertEqual(t.user, alice)
+        self.assertEqual(t.seconds, 10)
+        self.assertEqual(t.date, date(None))
+        self.assertEqual(cb, CROSSBUCKS_PER_SOLVE)
+        self.assertEqual(alice.crossbucks, cb)
+
+        self.assertEqual(alice.get_mini_crossword_time(date(None)), t)
+
+    def test_add_remove_time(self):
+        alice = CBUser.from_slackid('UALICE', 'alice')
+        self.assertEqual(alice.crossbucks, 0)
+
+        alice.add_mini_crossword_time(10, date(None))
+        self.assertEqual(alice.crossbucks, CROSSBUCKS_PER_SOLVE)
+
+        alice.remove_mini_crossword_time(date(None))
+        self.assertEqual(alice.crossbucks, CROSSBUCKS_PER_SOLVE)
+        self.assertEqual(alice.get_mini_crossword_time(date(None)), None)
+
+        a, t, cb, i = alice.add_mini_crossword_time(10, date(None))
+        self.assertTrue(a)
+        self.assertEqual(t.user, alice)
+        self.assertEqual(t.seconds, 10)
+        self.assertEqual(t.date, date(None))
+        self.assertEqual(cb, 0)
+        self.assertEqual(i, None)
+        self.assertEqual(alice.crossbucks, CROSSBUCKS_PER_SOLVE)
+        self.assertNotEqual(alice.get_mini_crossword_time(date(None)), None)
+
+    def test_add_fail(self):
+        alice = CBUser.from_slackid('UALICE', 'alice')
+        a, t, cb, i = alice.add_mini_crossword_time(-1, date(None))
+        self.assertTrue(a)
+        self.assertEqual(t.seconds, -1)
+        self.assertEqual(t.date, date(None))
+        self.assertTrue(t.is_fail())
+        self.assertEqual(cb, 0)
+        self.assertEqual(i, None)
 
 class SlackAppTests(PatchingTestCase):
 

@@ -45,10 +45,8 @@ class SlackRequest:
         self.channel = post_data['channel_id']
 
         self.slackid = post_data['user_id']
-        self.user, _ = CBUser.get_user_from_slackid(
-            slackid=post_data['user_id'],
-            slackname=post_data['user_name'],
-        )
+        self.user = CBUser.from_slackid(slackid=post_data['user_id'],
+                                        slackname=post_data['user_name'])
 
         self.in_channel = in_channel
         self.replies = []

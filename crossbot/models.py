@@ -24,23 +24,20 @@ class CBUser(models.Model):
     slackid = models.CharField(max_length=10, primary_key=True)
     slackname = models.CharField(max_length=100, blank=True)
 
-    auth_user = models.OneToOneField(User,
-                                     null=True,
-                                     blank=True,
+    auth_user = models.OneToOneField(User, null=True,
                                      on_delete=models.SET_NULL,
                                      related_name='cb_user')
 
-    hat = models.ForeignKey('Hat', null=True, blank=True, on_delete=models.SET_NULL)
+    hat = models.ForeignKey('Hat', null=True, on_delete=models.SET_NULL)
     crossbucks = models.IntegerField(default=0)
 
     @classmethod
-    def get_user_from_slackid(cls, slackid, slackname=None):
-        """Gets the user for a given slackid, updating slackname if given."""
+    def from_slackid(cls, slackid, slackname=None):
+        """Gets or creates the user with slackid, updating slackname."""
         if slackname:
             return cls.objects.update_or_create(
-                slackid=slackid, defaults={'slackname': slackname})
-        return cls.objects.get_or_create(slackid=slackid)
-
+                slackid=slackid, defaults={'slackname': slackname})[0]
+        return cls.objects.get_or_create(slackid=slackid)[0]
 
     def add_crossbucks(self, amount):
         """Add crossbucks to a user's account."""
@@ -56,7 +53,8 @@ class CBUser(models.Model):
         """
         assert isinstance(item, Item)
 
-        record = ItemOwnershipRecord.objects.get_or_create(owner=self, item=item)
+        record, _ = ItemOwnershipRecord.objects.get_or_create(
+            owner=self, item=item)
         record.quantity += amount
         record.save()
 
@@ -109,7 +107,8 @@ class CBUser(models.Model):
         time, created = time_model.objects.update_or_create(
             user=self,
             date=date,
-            defaults={'seconds': seconds})
+            defaults={'seconds': seconds,
+                      'timestamp': datetime.datetime.now()})
 
         # Don't award prizes for fails or added-then-deleted entries
         if time.is_fail() or not created:
@@ -150,31 +149,31 @@ class CBUser(models.Model):
                 time.save()
 
     def get_mini_crossword_time(self, *args, **kwargs):
-        self.get_time(MiniCrosswordTime, *args, **kwargs)
+        return self.get_time(MiniCrosswordTime, *args, **kwargs)
 
     def get_crossword_time(self, *args, **kwargs):
-        self.get_time(CrosswordTime, *args, **kwargs)
+        return self.get_time(CrosswordTime, *args, **kwargs)
 
     def get_easy_sudoku_time(self, *args, **kwargs):
-        self.get_time(EasySudokuTime, *args, **kwargs)
+        return self.get_time(EasySudokuTime, *args, **kwargs)
 
     def add_mini_crossword_time(self, *args, **kwargs):
-        self.add_time(MiniCrosswordTime, *args, **kwargs)
+        return self.add_time(MiniCrosswordTime, *args, **kwargs)
 
     def add_crossword_time(self, *args, **kwargs):
-        self.add_time(CrosswordTime, *args, **kwargs)
+        return self.add_time(CrosswordTime, *args, **kwargs)
 
     def add_easy_sudoku_time(self, *args, **kwargs):
-        self.add_time(EasySudokuTime, *args, **kwargs)
+        return self.add_time(EasySudokuTime, *args, **kwargs)
 
     def remove_mini_crossword_time(self, *args, **kwargs):
-        self.remove_time(MiniCrosswordTime, *args, **kwargs)
+        return self.remove_time(MiniCrosswordTime, *args, **kwargs)
 
     def remove_crossword_time(self, *args, **kwargs):
-        self.remove_time(CrosswordTime, *args, **kwargs)
+        return self.remove_time(CrosswordTime, *args, **kwargs)
 
     def remove_easy_sudoku_time(self, *args, **kwargs):
-        self.remove_time(EasySudokuTime, *args, **kwargs)
+        return self.remove_time(EasySudokuTime, *args, **kwargs)
 
     def __str__(self):
         return str(self.slackname if self.slackname else self.slackid)
@@ -188,10 +187,10 @@ class CommonTime(models.Model):
     user = models.ForeignKey(CBUser, on_delete=models.CASCADE)
     seconds = models.IntegerField(null=True)
     date = models.DateField()
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(null=True, auto_now_add=True)
 
     def is_fail(self):
-        return self.seconds < -1
+        return self.seconds < 0
 
     def time_str(self):
         if self.is_fail():
