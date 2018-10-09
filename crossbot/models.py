@@ -28,6 +28,13 @@ class CBUser(models.Model):
                                      on_delete=models.SET_NULL,
                                      related_name='cb_user')
 
+    # TODO: since hats are items, should we make sure that users possess them?
+    # Right now, someone could have a hat that they don't own (as an item).
+    # Probably we want some way to "equip" an item that you own.
+    #
+    # That does open up some holes as to how to handle giving away your current
+    # hat. Maybe you "give" it from your inventory to the hat slot? So equipped
+    # items are not owned?
     hat = models.ForeignKey('Hat', null=True, blank=True,
                             on_delete=models.SET_NULL)
     crossbucks = models.IntegerField(default=0)
