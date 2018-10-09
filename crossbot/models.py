@@ -74,7 +74,8 @@ class CBUser(models.Model):
         assert isinstance(date, datetime.date)
 
         try:
-            return time_model.objects.get(user=self, date=date)
+            return time_model.objects.get(user=self, date=date,
+                                          seconds__isnull=False)
         except time_model.DoesNotExist:
             return None
 
@@ -105,9 +106,13 @@ class CBUser(models.Model):
         if time:
             return (False, time, 0, None)
 
-        time = time_model.objects.create(user=self, seconds=seconds, date=date)
+        time, created = time_model.objects.update_or_create(
+            user=self,
+            date=date,
+            defaults={'seconds': seconds})
 
-        if time.is_fail():
+        # Don't award prizes for fails or added-then-deleted entries
+        if time.is_fail() or not created:
             crossbucks_earned = 0
             item = None
         else:
@@ -121,6 +126,28 @@ class CBUser(models.Model):
                 self.add_item(item)
 
         return (True, time, crossbucks_earned, item)
+
+    def remove_time(self, time_model, date):
+        """Remove a time for this user.
+
+        Removes a time record for this user. If the record is not a fail, does
+        not delete the record entirely, to prevent people from cheating to get
+        more crossbucks/items.
+
+        Args:
+            time_model: Reference to the subclass of CommonTime to remove.
+            date: The date of the puzzle.
+        """
+        assert issubclass(time_model, CommonTime)
+        assert isinstance(date, datetime.date)
+
+        time = self.get_time(time_model, date)
+        if time:
+            if time.is_fail():
+                time.delete()
+            else:
+                time.seconds = None
+                time.save()
 
     def get_mini_crossword_time(self, *args, **kwargs):
         self.get_time(MiniCrosswordTime, *args, **kwargs)
@@ -140,6 +167,15 @@ class CBUser(models.Model):
     def add_easy_sudoku_time(self, *args, **kwargs):
         self.add_time(EasySudokuTime, *args, **kwargs)
 
+    def remove_mini_crossword_time(self, *args, **kwargs):
+        self.remove_time(MiniCrosswordTime, *args, **kwargs)
+
+    def remove_crossword_time(self, *args, **kwargs):
+        self.remove_time(CrosswordTime, *args, **kwargs)
+
+    def remove_easy_sudoku_time(self, *args, **kwargs):
+        self.remove_time(EasySudokuTime, *args, **kwargs)
+
     def __str__(self):
         return str(self.slackname if self.slackname else self.slackid)
 
@@ -150,9 +186,9 @@ class CommonTime(models.Model):
         abstract = True
 
     user = models.ForeignKey(CBUser, on_delete=models.CASCADE)
-    seconds = models.IntegerField()
+    seconds = models.IntegerField(null=True)
     date = models.DateField()
-    timestamp = models.DateTimeField(null=True, auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def is_fail(self):
         return self.seconds < -1

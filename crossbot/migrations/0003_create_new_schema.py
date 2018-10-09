@@ -92,9 +92,9 @@ class Migration(migrations.Migration):
             name='TempCrosswordTime',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('seconds', models.IntegerField()),
+                ('seconds', models.IntegerField(null=True)),
                 ('date', models.DateField()),
-                ('timestamp', models.DateTimeField(auto_now_add=True, null=True)),
+                ('timestamp', models.DateTimeField(auto_now_add=True)),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='crossbot.CBUser')),
             ],
             options={
@@ -105,9 +105,9 @@ class Migration(migrations.Migration):
             name='TempEasySudokuTime',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('seconds', models.IntegerField()),
+                ('seconds', models.IntegerField(null=True)),
                 ('date', models.DateField()),
-                ('timestamp', models.DateTimeField(auto_now_add=True, null=True)),
+                ('timestamp', models.DateTimeField(auto_now_add=True)),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='crossbot.CBUser')),
             ],
             options={
@@ -118,9 +118,9 @@ class Migration(migrations.Migration):
             name='TempMiniCrosswordTime',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('seconds', models.IntegerField()),
+                ('seconds', models.IntegerField(null=True)),
                 ('date', models.DateField()),
-                ('timestamp', models.DateTimeField(auto_now_add=True, null=True)),
+                ('timestamp', models.DateTimeField(auto_now_add=True)),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='crossbot.CBUser')),
             ],
             options={
