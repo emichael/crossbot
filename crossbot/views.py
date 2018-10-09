@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 import crossbot
 import crossbot.handler
+import crossbot.slack
 
 # taken from https://api.slack.com/docs/verifying-requests-from-slack#a_recipe_for_security
 def validate_slack_request(request):
