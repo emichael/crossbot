@@ -50,6 +50,24 @@ class CBUser(models.Model):
         record.quantity += amount
         record.save()
 
+    def get_time(self, time_model, date):
+        """Get the time for this user for the given date.
+
+        Args:
+            time_model: Reference to the subclass of CommonTime to get.
+            date: The date of the puzzle.
+
+        Returns:
+            An instance of time_model if it exists, None otherwise.
+        """
+        assert isinstance(time_model, CommonTime)
+        assert isinstance(date, datetime.date)
+
+        try:
+            return time_model.get(user=self, date=date)
+        except time_model.DoesNotExist:
+            return None
+
     def add_time(self, time_model, seconds, date):
         """Add a time for this user for the given date.
 
@@ -70,12 +88,12 @@ class CBUser(models.Model):
         assert isinstance(seconds, int)
         assert isinstance(date, datetime.date)
 
-        if time_model.objects.filter(user=self, date=date).exists():
+        if self.get_time(time_model, date):
             return (False, 0, None)
 
-        time_model.create(user=self, seconds=seconds, date=date)
+        new_time = time_model.create(user=self, seconds=seconds, date=date)
 
-        if seconds == -1:
+        if new_time.is_fail():
             crossbucks_earned = 0
             item = None
         else:
@@ -89,6 +107,24 @@ class CBUser(models.Model):
                 self.add_item(item)
 
         return (True, crossbucks_earned, item)
+
+    def get_mini_crossword_time(self, *args, **kwargs):
+        self.get_time(MiniCrosswordTime, *args, **kwargs)
+
+    def get_crossword_time(self, *args, **kwargs):
+        self.get_time(CrosswordTime, *args, **kwargs)
+
+    def get_easy_sudoku_time(self, *args, **kwargs):
+        self.get_time(EasySudokuTime, *args, **kwargs)
+
+    def add_mini_crossword_time(self, *args, **kwargs):
+        self.add_time(MiniCrosswordTime, *args, **kwargs)
+
+    def add_crossword_time(self, *args, **kwargs):
+        self.add_time(CrosswordTime, *args, **kwargs)
+
+    def add_easy_sudoku_time(self, *args, **kwargs):
+        self.add_time(EasySudokuTime, *args, **kwargs)
 
     def __str__(self):
         return str(self.slackname if self.slackname else self.slackid)
@@ -104,8 +140,11 @@ class CommonTime(models.Model):
     date = models.DateField()
     timestamp = models.DateTimeField(null=True, auto_now_add=True)
 
+    def is_fail(self):
+        return self.seconds < -1
+
     def time_str(self):
-        if self.seconds < 0:
+        if self.is_fail():
             return 'fail'
 
         minutes, seconds = divmod(self.seconds, 60)
