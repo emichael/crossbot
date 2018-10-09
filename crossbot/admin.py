@@ -1,7 +1,11 @@
-from django.contrib import admin
 import requests
 
+from django.contrib import admin
+from solo.admin import SingletonModelAdmin
+
 import crossbot.models as models
+
+admin.site.register(models.CrossbotSettings, SingletonModelAdmin)
 
 admin.site.register(models.CBUser)
 
