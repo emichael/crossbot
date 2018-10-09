@@ -24,6 +24,7 @@ class CBUser(models.Model):
                                      related_name='cb_user')
 
     hat = models.ForeignKey('Hat', null=True, on_delete=models.SET_NULL)
+    crossbucks = models.IntegerField(default=0)
 
     def __str__(self):
         return str(self.slackname if self.slackname else self.slackid)
