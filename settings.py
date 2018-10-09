@@ -43,6 +43,7 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS = [
     'crossbot.apps.CrossbotConfig',
     'solo.apps.SoloAppConfig',
+    'explorer.apps.ExplorerAppConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -142,3 +143,8 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+
+# SQL Explorer Settings
+EXPLORER_CONNECTIONS = { 'Default': 'default' }
+EXPLORER_DEFAULT_CONNECTION = 'default'

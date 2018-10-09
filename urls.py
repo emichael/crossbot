@@ -19,4 +19,5 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('slack/', include('crossbot.urls')),
+    path('explorer/', include('explorer.urls')),
 ]
