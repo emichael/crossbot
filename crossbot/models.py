@@ -10,17 +10,6 @@ class CrossbotSettings(SingletonModel):
     item_drop_rate = models.FloatField(default=0.1)
 
 
-class CBAuthUser(User):
-    """Simple proxy to underlying auth users, not used directly."""
-    class Meta:
-        proxy = True
-
-    def __str__(self):
-        try:
-            return str(self.cb_user) # pylint: disable=no-member
-        except CBUser.DoesNotExist:
-            return str(self.username)
-
 class CBUser(models.Model):
     """Main user model used by the rest of the app."""
     class Meta:
@@ -30,7 +19,7 @@ class CBUser(models.Model):
     slackid = models.CharField(max_length=10, primary_key=True)
     slackname = models.CharField(max_length=100, blank=True)
 
-    auth_user = models.OneToOneField(CBAuthUser, null=True,
+    auth_user = models.OneToOneField(User, null=True,
                                      on_delete=models.SET_NULL,
                                      related_name='cb_user')
 
@@ -41,14 +30,14 @@ class CBUser(models.Model):
 
 
 class CommonTime(models.Model):
+    class Meta:
+        unique_together = ("user", "date")
+        abstract = True
+
     user = models.ForeignKey(CBUser, on_delete=models.CASCADE)
     seconds = models.IntegerField()
     date = models.DateField()
     timestamp = models.DateTimeField(null=True, auto_now_add=True)
-
-    class Meta:
-        unique_together = ("user", "date")
-        abstract = True
 
     def time_str(self):
         if self.seconds < 0:
