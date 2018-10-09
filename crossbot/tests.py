@@ -15,29 +15,29 @@ from crossbot.views import slash_command
 
 # Create your tests here.
 
+class PatchingTestCase(TestCase):
+    def patch(self, *args, **kwargs):
+        patcher = patch(*args, **kwargs)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        return patcher
+
 class ModelTests(TestCase):
 
     def test_something(self):
         pass
 
 
-class SlackAppTests(TestCase):
+class SlackAppTests(PatchingTestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
 
         self.slack_sk = b'8f742231b10e8888abcd99yyyzzz85a5'
 
-        self.patcher_sk = patch('keys.SLACK_SECRET_SIGNING_KEY', self.slack_sk)
+        self.patch('keys.SLACK_SECRET_SIGNING_KEY', self.slack_sk)
         # Make the slack api return an object with always returns 'ok'
-        self.patcher_slack = patch('crossbot.slack._slack_api', MagicMock('ok'))
-
-        self.patcher_sk.start()
-        self.patcher_slack.start()
-
-    def tearDown(self):
-        self.patcher_sk.stop()
-        self.patcher_slack.stop()
+        self.patch('crossbot.slack._slack_api', MagicMock('ok'))
 
     def post_valid_request(self, post_data):
         request = self.factory.post(reverse('slash_command'),
