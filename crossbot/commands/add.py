@@ -40,16 +40,10 @@ def add(request):
 
     args = request.args
 
-    try:
-        # we have to wrap this in a new transaction, otherwise the implicit
-        # transaction we are in will be closed upon error, and then we couldn't
-        # make a query in the except case.
-        with transaction.atomic():
-            time = args.table(user = request.user, date = args.date, seconds = args.time)
-            time.save()
-    except IntegrityError:
-        time = args.table.objects.get(user = request.user, date = args.date)
+    was_added, time, crossbucks_earned, item_dropped = request.user.add_time(
+        args.table, args.time, args.date)
 
+    if not was_added:
         request.reply('I could not add this to the database, '
                       'because you already have an entry '
                       '({}) for this date.'.format(time.time_str()),
@@ -57,7 +51,6 @@ def add(request):
         return
 
     day_of_week = timezone.now().weekday()
-
     emj = emoji(args.time, args.table, day_of_week)
 
     request.message_and_react('<@{}>: {}'.format(request.slackid, request.text), emj)

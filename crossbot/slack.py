@@ -1,7 +1,7 @@
 import requests
 import keys
 
-import crossbot.models
+from crossbot.models import CBUser
 
 SLACK_URL = 'https://slack.com/api/'
 
@@ -45,7 +45,7 @@ class SlackRequest:
         self.channel = post_data['channel_id']
 
         self.slackid = post_data['user_id']
-        self.user, _ = crossbot.models.CBUser.objects.get_or_create(
+        self.user, _ = CBUser.get_user_from_slackid(
             slackid=post_data['user_id'],
             slackname=post_data['user_name'],
         )

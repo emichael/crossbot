@@ -1,8 +1,7 @@
 """Crossbot Django models."""
 
+import datetime
 import random
-
-from datetime import datetime
 
 from django.contrib.auth.models import User
 from django.db import models
@@ -32,6 +31,15 @@ class CBUser(models.Model):
     hat = models.ForeignKey('Hat', null=True, on_delete=models.SET_NULL)
     crossbucks = models.IntegerField(default=0)
 
+    @classmethod
+    def get_user_from_slackid(cls, slackid, slackname=None):
+        """Gets the user for a given slackid, updating slackname if given."""
+        if slackname:
+            return cls.objects.update_or_create(
+                slackid=slackid, defaults={'slackname': slackname})
+        return cls.objects.get_or_create(slackid=slackid)
+
+
     def add_crossbucks(self, amount):
         """Add crossbucks to a user's account."""
         self.crossbucks += amount
@@ -46,7 +54,7 @@ class CBUser(models.Model):
         """
         assert isinstance(item, Item)
 
-        record = ItemOwnershipRecord.get_or_create(owner=self, item=item)
+        record = ItemOwnershipRecord.objects.get_or_create(owner=self, item=item)
         record.quantity += amount
         record.save()
 
@@ -60,11 +68,11 @@ class CBUser(models.Model):
         Returns:
             An instance of time_model if it exists, None otherwise.
         """
-        assert isinstance(time_model, CommonTime)
+        assert issubclass(time_model, CommonTime)
         assert isinstance(date, datetime.date)
 
         try:
-            return time_model.get(user=self, date=date)
+            return time_model.objects.get(user=self, date=date)
         except time_model.DoesNotExist:
             return None
 
@@ -78,22 +86,25 @@ class CBUser(models.Model):
             date: The date of the puzzle.
 
         Returns:
-            A 3-tuple, (was_added, crossbucks_earned, item_dropped), where
+            A 4-tuple, (was_added, time, crossbucks_earned, item_dropped), where
             was_added denotes whether or not the time was successfully added,
-            crossbucks_earned is the number of crossbucks earned for this solve,
-            and item_dropped is a reference to the Item object the user found
-            (or None if there wasn't a drop).
+            time is the instace of time_model for this user and date (the
+            already existent one if was_added is False), crossbucks_earned is
+            the number of crossbucks earned for this solve, and item_dropped is
+            a reference to the Item object the user found (or None if there
+            wasn't a drop).
         """
-        assert isinstance(time_model, CommonTime)
+        assert issubclass(time_model, CommonTime)
         assert isinstance(seconds, int)
         assert isinstance(date, datetime.date)
 
-        if self.get_time(time_model, date):
-            return (False, 0, None)
+        time = self.get_time(time_model, date)
+        if time:
+            return (False, time, 0, None)
 
-        new_time = time_model.create(user=self, seconds=seconds, date=date)
+        time = time_model.objects.create(user=self, seconds=seconds, date=date)
 
-        if new_time.is_fail():
+        if time.is_fail():
             crossbucks_earned = 0
             item = None
         else:
@@ -106,7 +117,7 @@ class CBUser(models.Model):
             if item:
                 self.add_item(item)
 
-        return (True, crossbucks_earned, item)
+        return (True, time, crossbucks_earned, item)
 
     def get_mini_crossword_time(self, *args, **kwargs):
         self.get_time(MiniCrosswordTime, *args, **kwargs)
