@@ -142,3 +142,8 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+
+# Setup for keeping FileFields and ImageFields
+MEDIA_ROOT = 'uploaded_files'
+MEDIA_URL = 'media/'

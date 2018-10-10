@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('slackid', models.CharField(max_length=10, primary_key=True, serialize=False)),
                 ('slackname', models.CharField(blank=True, max_length=100)),
-                ('auth_user', models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='cb_user', to=settings.AUTH_USER_MODEL)),
+                ('auth_user', models.OneToOneField(null=True, blank=True, on_delete=django.db.models.deletion.SET_NULL, related_name='cb_user', to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'verbose_name': 'CBUser',
@@ -167,6 +167,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='cbuser',
             name='hat',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='crossbot.Hat'),
+            field=models.ForeignKey(null=True,  blank=True, on_delete=django.db.models.deletion.SET_NULL, to='crossbot.Hat'),
         ),
     ]

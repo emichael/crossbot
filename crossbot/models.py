@@ -445,9 +445,15 @@ class QueryShorthand(models.Model):
         return '{} - {}'.format(self.name, self.user)
 
 
+def _item_image_upload_path(instance, filename):
+    return 'itemimages/%s.%s' % (instance.name, filename.split('.')[-1])
+
 class Item(models.Model):
     name = models.CharField(max_length=100, primary_key=True)
-    emoji_str = models.CharField(max_length=100)
+    # TODO: add more validation to the image field, auto_convert it, etc.
+    # TODO: figure out how to actually serve static files properly, including
+    #       user-uploaded files
+    image = models.ImageField(upload_to=_item_image_upload_path, null=True)
     droppable = models.BooleanField(default=True)
     rarity = models.FloatField(default=1.0)
 
