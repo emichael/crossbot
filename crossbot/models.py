@@ -15,6 +15,9 @@ class CrossbotSettings(SingletonModel):
     item_drop_rate = models.FloatField(default=0.1)
 
 
+# TODO: switch from return codes to exceptions to help with transactions???
+#       or, we can use set_rollback
+#       https://stackoverflow.com/questions/39332010/django-how-to-rollback-transaction-atomic-without-raising-exception
 class CBUser(models.Model):
     """Main user model used by the rest of the app."""
     class Meta:
@@ -40,12 +43,25 @@ class CBUser(models.Model):
     crossbucks = models.IntegerField(default=0)
 
     @classmethod
-    def from_slackid(cls, slackid, slackname=None):
-        """Gets or creates the user with slackid, updating slackname."""
-        if slackname:
+    def from_slackid(cls, slackid, slackname=None, create=True):
+        """Gets or creates the user with slackid, updating slackname.
+
+        Returns:
+            The CBUser if it exists or create=True, None otherwise.
+        """
+        if create and slackname:
             return cls.objects.update_or_create(
                 slackid=slackid, defaults={'slackname': slackname})[0]
-        return cls.objects.get_or_create(slackid=slackid)[0]
+        if create:
+            return cls.objects.get_or_create(slackid=slackid)[0]
+        try:
+            user = cls.objects.get(slackid=slackid)
+            if slackname:
+                user.slackname = slackname
+                user.save()
+            return user
+        except cls.DoesNotExist:
+            return None
 
     @classmethod
     def update_slacknames(cls):
@@ -59,24 +75,147 @@ class CBUser(models.Model):
             user.slackname = users[user.slackid]['name']
             user.save()
 
+
     def add_crossbucks(self, amount):
         """Add crossbucks to a user's account."""
+        assert amount > 0
+
+        # TODO: this doesn't actually give us consistency, even if we're
+        #       operating in a transaction (I think) since we're operating on a
+        #       stale version of the CBUser instance and this gets turned into a
+        #       simple INSERT. Don't really know if we ever plan on running w/
+        #       multiple threads, though. Other functions will have the same
+        #       problem as this one.
+
         self.crossbucks += amount
         self.save()
+
+    def remove_crossbucks(self, amount):
+        """Add crossbucks to a user's account.
+
+        Returns:
+            Whether or not the crossbucks were deducted.
+        """
+        assert amount > 0
+
+        if amount > self.crossbucks:
+            return False
+        self.crossbucks -= amount
+        self.save()
+        return True
+
+    def give_crossbucks(self, other_user, amount):
+        """Give crossbucks to another user.
+
+        Returns:
+            Whether or not the crossbucks were given.
+        """
+        assert isinstance(other_user, CBUser)
+        assert amount > 0
+
+        if not self.remove_crossbucks(amount):
+            return False
+        other_user.add_crossbucks(amount)
+        return True
 
     def add_item(self, item, amount=1):
         """Add an item to this user's inventory.
 
         Args:
             item: An Item object.
-            amount: An integer.
+            amount: An integer > 0.
         """
         assert isinstance(item, Item)
+        assert amount > 0
 
         record, _ = ItemOwnershipRecord.objects.get_or_create(
             owner=self, item=item)
         record.quantity += amount
         record.save()
+
+    def remove_item(self, item, amount=1):
+        """Remove an item from this user's inventory.
+
+        Args:
+            item: The Item to remove.
+            amount: An integer > 0.
+
+        Returns:
+            Whether or not the item was removed.
+        """
+        assert isinstance(item, Item)
+        assert amount > 0
+
+        try:
+            record = ItemOwnershipRecord.objects.get(owner=self, item=item)
+        except ItemOwnershipRecord.DoesNotExist:
+            return False
+
+        # Check to see if there are enough to safely delete
+        if amount > (record.quantity + (1 if item == self.hat else 0)):
+            return False
+
+        record.quantity -= amount
+        if record.quantity == 0:
+            record.delete()
+        else:
+            record.save()
+        return True
+
+    def quantity_owned(self, item):
+        """Return the amount of a given item this user owns."""
+        assert isinstance(item, Item)
+        try:
+            return ItemOwnershipRecord.get(owner=self, item=item).quantity
+        except ItemOwnershipRecord.DoesNotExist:
+            return 0
+
+    def give_item(self, item, other_user, amount=1):
+        """Give item(s) to another user.
+
+        Args:
+            item: The Item to give.
+            other_user: A CBUser.
+            amount: An integer > 0.
+
+        Returns:
+            Whether or not the items were sucessfully given.
+        """
+        assert isinstance(item, Item)
+        assert isinstance(other_user, CBUser)
+        assert amount > 0
+
+        if not self.remove_item(item, amount):
+            return False
+        other_user.add_item(item, amount)
+        return True
+
+    def don_hat(self, hat):
+        """Put on a hat if the user owns at least one.
+
+        Args:
+            hat: A Hat.
+
+        Returns:
+            Whether or not the hat was sucessfully put on.
+        """
+        if self.quantity_owned(hat) > 0:
+            self.hat = hat
+            self.save()
+            return True
+        return False
+
+    def doff_hat(self):
+        """Take off hat.
+
+        Returns:
+            Whether you had a hat on in the first place.
+        """
+        if self.hat is not None:
+            self.hat = None
+            self.save()
+            return True
+        return False
 
     def get_time(self, time_model, date):
         """Get the time for this user for the given date.
@@ -208,6 +347,11 @@ class CommonTime(models.Model):
     seconds = models.IntegerField(null=True)
     date = models.DateField()
     timestamp = models.DateTimeField(null=True, auto_now_add=True)
+
+    @classmethod
+    def non_null(cls):
+        """Return a query set with non-null times (i.e., non-deleted)."""
+        return cls.objects.filter(seconds__isnull=False)
 
     def is_fail(self):
         return self.seconds < 0
