@@ -64,6 +64,12 @@ def add(request):
                 print("Achievement reaction failed!")
             request.reply(msg)
 
+    if crossbucks_earned:
+        request.reply("Earned CB${}".format(crossbucks_earned))
+
+    if item_dropped:
+        request.reply("Found a {}".format(item_dropped))
+
     print("{} has a streak of {} in {}".format(request.user, new_sc, args.table))
 
     # if args.table == 'mini_crossword_time':
