@@ -1,5 +1,3 @@
-import requests
-
 from django.contrib import admin
 from solo.admin import SingletonModelAdmin
 
