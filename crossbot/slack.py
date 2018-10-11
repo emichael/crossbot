@@ -66,25 +66,24 @@ class SlackRequest:
         }
 
 
-class SlackEventRequest:
+# class SlackEventRequest:
+#     def __init__(self, post_data, in_channel=False):
+#         self.text = post_data['text']
+#         self.timestamp = post_data['ts']
+#         self.channel = post_data['channel']
 
-    def __init__(self, post_data, in_channel=False):
-        self.text = post_data['text']
-        self.timestamp = post_data['ts']
-        self.channel = post_data['channel']
+#         self.slackid = post_data['user_id']
+#         slackuser, created = crossbot.models.CBUser.objects.get_or_create(
+#             slackid = post_data['user'],
+#         )
 
-        self.slackid = post_data['user_id']
-        slackuser, created = crossbot.models.CBUser.objects.get_or_create(
-            slackid = post_data['user'],
-        )
+#         self.user = slackuser.user
 
-        self.user = slackuser.user
+#         self.in_channel = in_channel
 
-        self.in_channel = in_channel
+#     def reply(self, msg, direct=False):
+#         post_message(self.channel, text = msg)
 
-    def reply(self, msg, direct=False):
-        post_message(self.channel, text = msg)
-
-    # note, this one is not delayed
-    def message_and_react(self, msg, emoji):
-        react(emoji, self.channel, self.timestamp)
+#     # note, this one is not delayed
+#     def message_and_react(self, msg, emoji):
+#         react(emoji, self.channel, self.timestamp)
