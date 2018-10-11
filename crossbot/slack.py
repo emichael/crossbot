@@ -56,14 +56,23 @@ class SlackRequest:
 
     # note, this one is not delayed
     def message_and_react(self, msg, emoji):
+        # TODO: add author and author_icon here?
         timestamp = post_message(self.channel, text=msg)
         react(emoji, self.channel, timestamp)
 
     def response_json(self):
-        return {
+        response = {
             'response_type': 'in_channel' if self.in_channel else 'ephemeral',
             'text': '\n'.join(self.replies)
         }
+
+        if self.in_channel:
+            response['author_name'] = str(self.user)
+
+            if self.user.hat:
+                response['author_icon'] = self.user.hat.url
+
+        return response
 
 
 # class SlackEventRequest:
