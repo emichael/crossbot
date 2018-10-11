@@ -187,3 +187,7 @@ class SlackAppTests(PatchingTestCase):
         # Alice can put it on
         response = self.slack_post('hat foohat', who='alice')
         self.assertIn("donned", json.loads(response.content)['text'])
+
+        # Bob can't
+        response = self.slack_post('hat foohat', who='bob')
+        self.assertNotIn("donned", json.loads(response.content)['text'])
