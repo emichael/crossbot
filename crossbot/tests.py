@@ -10,7 +10,7 @@ from django.test.client import RequestFactory
 from django.urls import reverse
 
 from crossbot import date
-from crossbot.models import CBUser
+from crossbot.models import CrossbotSettings, CBUser, Hat
 from crossbot.settings import CROSSBUCKS_PER_SOLVE
 from crossbot.views import slash_command
 
@@ -170,3 +170,20 @@ class SlackAppTests(PatchingTestCase):
         # line 0 is date, line 1 should be alice
         self.assertIn('alice', lines[1])
         self.assertIn(':fire:', lines[1])
+
+    def test_hat(self):
+        # First, make sure there's a droppable hat
+        hat = Hat.objects.create(name="foohat")
+
+        # Crank up the droprate to 100%
+        settings = CrossbotSettings.get_solo()
+        settings.item_drop_rate = 1.0
+        settings.save()
+
+        # Alice must find a foohat
+        response = self.slack_post('add :15 2018-08-01', who='alice')
+        self.assertIn("foohat", json.loads(response.content)['text'])
+
+        # Alice can put it on
+        response = self.slack_post('hat foohat', who='alice')
+        self.assertIn("donned", json.loads(response.content)['text'])

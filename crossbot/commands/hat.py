@@ -18,18 +18,18 @@ def hat(request):
     args = request.args
 
     if args.remove:
-        request.user.remove_hat()
+        request.user.doff()
         request.reply("Hat removed.")
         return
 
     try:
-        hat_item = Hat.get(args.hat)
+        hat_item = Hat.objects.get(name=args.hat)
     except Hat.DoesNotExist:
         request.reply("{} does not exist".format(args.hat))
         return
     if request.user.don(hat_item):
-        request.reply("You don't own a {}".format(args.hat))
-    else:
         request.reply("You donned a {}".format(args.hat))
+    else:
+        request.reply("You don't own a {}".format(args.hat))
 
         print("{} put on a {}".format(request.user, args.hat))

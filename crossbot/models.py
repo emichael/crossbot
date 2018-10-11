@@ -14,7 +14,7 @@ from crossbot.settings import CROSSBUCKS_PER_SOLVE
 
 class CrossbotSettings(SingletonModel):
     """Crossbot settings, editable through the admin interface."""
-    item_drop_rate = models.FloatField(default=0.1)
+    item_drop_rate = models.FloatField(default=0.1) # 0.0 - 1.0
 
 
 # TODO: switch from return codes to exceptions to help with transactions???
@@ -168,7 +168,8 @@ class CBUser(models.Model):
         """Return the amount of a given item this user owns."""
         assert isinstance(item, Item)
         try:
-            return ItemOwnershipRecord.get(owner=self, item=item).quantity
+            return ItemOwnershipRecord.objects.get(
+                owner=self, item=item).quantity
         except ItemOwnershipRecord.DoesNotExist:
             return 0
 
@@ -192,7 +193,7 @@ class CBUser(models.Model):
         other_user.add_item(item, amount)
         return True
 
-    def don_hat(self, hat):
+    def don(self, hat):
         """Put on a hat if the user owns at least one.
 
         Args:
@@ -207,7 +208,7 @@ class CBUser(models.Model):
             return True
         return False
 
-    def doff_hat(self):
+    def doff(self):
         """Take off hat.
 
         Returns:
@@ -498,7 +499,7 @@ class Item(models.Model):
     #       user-uploaded files
     image = models.ImageField(upload_to=_item_image_upload_path, null=True)
     droppable = models.BooleanField(default=True)
-    rarity = models.FloatField(default=1.0)
+    rarity = models.FloatField(default=1.0) # Simply a weight
 
     @classmethod
     def choose_droppable(cls):
@@ -521,7 +522,8 @@ class Item(models.Model):
         if not droppables.exists():
             return None
 
-        return random.choices(droppables, [item.rarity for item in droppables])
+        return random.choices(droppables,
+                              [item.rarity for item in droppables])[0]
 
     def __str__(self):
         return self.name
