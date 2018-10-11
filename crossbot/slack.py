@@ -56,7 +56,7 @@ class SlackRequest:
 
     # note, this one is not delayed
     def message_and_react(self, msg, emoji):
-        # TODO: add author and author_icon here?
+        # TODO: add author and author_icon here? Not sure how all of this gets glued together.
         timestamp = post_message(self.channel, text=msg)
         react(emoji, self.channel, timestamp)
 
