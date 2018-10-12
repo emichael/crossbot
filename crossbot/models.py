@@ -9,7 +9,9 @@ import yaml
 
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.templatetags.staticfiles import static
-from django.db import models
+from django.db import models, transaction
+from django.db.models import Q
+from solo.models import SingletonModel
 
 from crossbot.settings import APP_SETTINGS
 
@@ -277,6 +279,7 @@ class CBUser(models.Model):
             item = None
         else:
             crossbucks_earned = APP_SETTINGS['CROSSBUCKS_PER_SOLVE']
+            crossbucks_earned += time_model.participation_streak_reward_diff(self, date)
             self.crossbucks += crossbucks_earned
             self.save()
 
@@ -285,6 +288,7 @@ class CBUser(models.Model):
             if item:
                 self.add_item(item)
 
+        # TODO question: should `crossbucks_earned` include the streak reward?
         return (True, time, crossbucks_earned, item)
 
     def remove_time(self, time_model, date):
@@ -381,6 +385,64 @@ class CBUser(models.Model):
         return str(self.slackname if self.slackname else self.slackid)
 
 
+class StreakReward:
+    def __init__(self, *, length, messages):
+        self.length = length
+        self.messages = messages
+
+    def crossbucks_reward(self):
+        return self.length * APP_SETTINGS['CROSSBUCKS_PER_SOLVE'] * 0.5
+
+
+STREAK_REWARDS = {
+    # StreakReward(length = 1, messages = [
+    #     ["First one in a while, {name}.",
+    #      "Try it every day, ({name})." ]
+    # ]),
+    StreakReward(length = 3, messages = [
+        "3 entries in a row! Keep it up {name}!",
+        "Nice work, 3 in a row!"
+    ]),
+    StreakReward(length = 10, messages = [
+        "{name}'s on a streak of 10 entries, way to go!"
+    ]),
+    StreakReward(length = 25, messages = [
+        ":open_mouth:, 25 days in a row!"
+    ]),
+    StreakReward(length = 50, messages = [
+        "50 in a row, here's a medal :sports_medal:!"
+    ]),
+    StreakReward(length = 100, messages = [
+        ":100::100::100: {name}'s done 100 crosswords in a row! :100::100::100:"
+    ]),
+    StreakReward(length = 150, messages = [
+        "{name}'s on a streak of 150 days... impressive!"
+    ]),
+    StreakReward(length = 200, messages = [
+        ":two::zero::zero: days in a row!?! Wow! Great work {name}!"
+    ]),
+    StreakReward(length = 300, messages = [
+        "Congrats {name} for doing 300 crosswords in a row!"
+    ]),
+    StreakReward(length = 365, messages = [
+        "Whoa, {name} just finished a full *year of crosswords*! Congratulations! :calendar::partypopper:"
+    ]),
+    StreakReward(length = 500, messages = [
+        "{name} just completed their 500th in a row! :partypopper:"
+    ]),
+}
+
+def calculate_streak_rewards(streaks):
+
+    total_reward = 0
+
+    for streak in streaks:
+        for reward in STREAK_REWARDS:
+            if len(streak) >= reward.length:
+                total_reward += reward.crossbucks_reward()
+
+    return total_reward
+
 class CommonTime(models.Model):
     class Meta:
         unique_together = ("user", "date")
@@ -409,6 +471,52 @@ class CommonTime(models.Model):
 
     def __str__(self):
         return '{} - {} - {}'.format(self.user, self.time_str(), self.date)
+
+    @staticmethod
+    def streaks(qs):
+        """Takes a query set times and returns the streaks clumped together."""
+
+        streaks = []
+        current_streak = []
+
+        one_day = datetime.timedelta(days=1)
+
+        for entry in qs.order_by('date'):
+            if not current_streak or entry.date == current_streak[-1].date + one_day:
+                # either there wasn't a streak so we should start one, or we maintained a streak
+                current_streak.append(entry)
+            else:
+                # we broke it, create a new one
+                streaks.append(current_streak)
+                current_streak = [entry]
+
+        if current_streak:
+            streaks.append(current_streak)
+
+        return streaks
+
+    @classmethod
+    def participation_streak_reward_diff(cls, user, *dates):
+        """Calculates the reward that a user should be given for
+        particular date (or list of dates) that is *already in* the database """
+
+        streaks1 = cls.participation_streak(user)
+        rewards1 = calculate_streak_rewards(streaks1)
+
+        streaks2 = cls.participation_streak(user, filter_q=~Q(date__in=dates))
+        rewards2 = calculate_streak_rewards(streaks2)
+
+        assert rewards1 >= rewards2
+
+        return rewards1 - rewards2
+
+    @classmethod
+    def participation_streak(cls, user, filter_q=None):
+        times = cls.objects.filter(seconds__isnull=False, user_id=user)
+        if filter_q:
+            times = times.filter(filter_q)
+
+        return cls.streaks(times)
 
 
 class MiniCrosswordTime(CommonTime):
