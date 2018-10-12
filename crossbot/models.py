@@ -308,7 +308,7 @@ class CBUser(models.Model):
         time = self.get_time(time_model, date)
         if time:
             if time.is_fail():
-                time.delete()
+                time.delete() # TODO: don't delete fully ever, can allow cheating
             else:
                 time.seconds = None
                 time.save()
