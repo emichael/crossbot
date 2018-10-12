@@ -11,7 +11,6 @@ from django.contrib.auth.models import User
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.db import models, transaction
 from django.db.models import Q
-from solo.models import SingletonModel
 
 from crossbot.settings import APP_SETTINGS
 
