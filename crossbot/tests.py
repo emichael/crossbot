@@ -10,7 +10,7 @@ from django.test.client import RequestFactory
 from django.urls import reverse
 
 from crossbot import date
-from crossbot.models import CrossbotSettings, CBUser, Hat
+from crossbot.models import CrossbotSettings, CBUser, Hat, MiniCrosswordTime
 from crossbot.settings import CROSSBUCKS_PER_SOLVE
 from crossbot.views import slash_command
 
@@ -76,6 +76,39 @@ class ModelTests(TestCase):
         self.assertTrue(t.is_fail())
         self.assertEqual(cb, 0)
         self.assertEqual(i, None)
+
+    def test_streak(self):
+        alice = CBUser.from_slackid('UALICE', 'alice')
+
+        # set up a broken streak and make sure that it separated them
+        _, t1, _, _ = alice.add_mini_crossword_time(18, date('2018-01-01'))
+        _, t2, _, _ = alice.add_mini_crossword_time(12, date('2018-01-02'))
+        _, t4, _, _ = alice.add_mini_crossword_time(15, date('2018-01-04'))
+
+        streaks = MiniCrosswordTime.participation_streak(alice)
+        self.assertListEqual(
+            streaks,
+            [[t1, t2], [t4]]
+        )
+
+        # fix the broken streak
+        _, t3, _, _ = alice.add_mini_crossword_time(15, date('2018-01-03'))
+
+        streaks = MiniCrosswordTime.participation_streak(alice)
+        self.assertListEqual(
+            streaks,
+            [[t1, t2, t3, t4]]
+        )
+
+        # now break it again with a deleted time (t2)
+        alice.remove_mini_crossword_time(date('2018-01-02'))
+
+        streaks = MiniCrosswordTime.participation_streak(alice)
+        self.assertListEqual(
+            streaks,
+            [[t1], [t3, t4]]
+        )
+
 
 class SlackAppTests(PatchingTestCase):
 
