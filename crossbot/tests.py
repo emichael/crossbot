@@ -10,6 +10,7 @@ from django.test.client import RequestFactory
 from django.urls import reverse
 
 from crossbot import date
+import crossbot.models
 from crossbot.models import CrossbotSettings, CBUser, Hat, MiniCrosswordTime
 from crossbot.settings import CROSSBUCKS_PER_SOLVE
 from crossbot.views import slash_command
@@ -80,33 +81,58 @@ class ModelTests(TestCase):
     def test_streak(self):
         alice = CBUser.from_slackid('UALICE', 'alice')
 
-        # set up a broken streak and make sure that it separated them
+        # preload the reward amounts
+        rs = crossbot.models.STREAK_REWARDS
+        (reward3,) = (r.crossbucks_reward() for r in rs if r.length == 3)
+        (reward10,) = (r.crossbucks_reward() for r in rs if r.length == 10)
+
+        # set up a broken 10 streak
         _, t1, _, _ = alice.add_mini_crossword_time(18, date('2018-01-01'))
         _, t2, _, _ = alice.add_mini_crossword_time(12, date('2018-01-02'))
+        _, t3, _, _ = alice.add_mini_crossword_time(12, date('2018-01-03'))
         _, t4, _, _ = alice.add_mini_crossword_time(15, date('2018-01-04'))
+        # t5 is missing
+        _, t6, _, _ = alice.add_mini_crossword_time(15, date('2018-01-06'))
+        _, t7, _, _ = alice.add_mini_crossword_time(15, date('2018-01-07'))
+        _, t8, _, _ = alice.add_mini_crossword_time(15, date('2018-01-08'))
+        _, t9, _, _ = alice.add_mini_crossword_time(15, date('2018-01-09'))
+        _, t0, _, _ = alice.add_mini_crossword_time(18, date('2018-01-10'))
 
+        # make sure the streak is broken
         streaks = MiniCrosswordTime.participation_streak(alice)
         self.assertListEqual(
             streaks,
-            [[t1, t2], [t4]]
+            [[t1, t2, t3, t4], [t6, t7, t8, t9, t0]]
         )
+
+        # make sure alice's money is the streak bonuses + the solve bonuses
+        self.assertEqual(alice.crossbucks, 2 * reward3 + CROSSBUCKS_PER_SOLVE * 9)
 
         # fix the broken streak
-        _, t3, _, _ = alice.add_mini_crossword_time(15, date('2018-01-03'))
+        _, t5, _, _ = alice.add_mini_crossword_time(15, date('2018-01-05'))
 
         streaks = MiniCrosswordTime.participation_streak(alice)
         self.assertListEqual(
             streaks,
-            [[t1, t2, t3, t4]]
+            [[t1, t2, t3, t4, t5, t6, t7, t8, t9, t0]]
         )
+
+        # make sure the reward diff is correct
+        diff = MiniCrosswordTime.participation_streak_reward_diff(alice, t5.date)
+        new_rewards = reward3 + reward10
+        old_rewards = 2 * reward3
+        self.assertEquals(diff, new_rewards - old_rewards)
+
+        # make sure alice's money is the streak bonuses + the solve bonuses
+        # without double counting reward3
+        self.assertEqual(alice.crossbucks, reward10 + reward3 + CROSSBUCKS_PER_SOLVE * 10)
 
         # now break it again with a deleted time (t2)
         alice.remove_mini_crossword_time(date('2018-01-02'))
-
         streaks = MiniCrosswordTime.participation_streak(alice)
         self.assertListEqual(
             streaks,
-            [[t1], [t3, t4]]
+            [[t1], [t3, t4, t5, t6, t7, t8, t9, t0]]
         )
 
 
