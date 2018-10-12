@@ -38,7 +38,10 @@ class CBUser(models.Model):
     # That does open up some holes as to how to handle giving away your current
     # hat. Maybe you "give" it from your inventory to the hat slot? So equipped
     # items are not owned?
+
+    # TODO: add custom item field???
     hat = models.CharField(max_length=20, null=True, blank=True)
+
     crossbucks = models.IntegerField(default=0)
 
     @classmethod
@@ -203,7 +206,7 @@ class CBUser(models.Model):
         assert hat.is_hat()
 
         if self.quantity_owned(hat) > 0:
-            self.hat = hat
+            self.hat = hat.key
             self.save()
             return True
         return False
@@ -306,11 +309,8 @@ class CBUser(models.Model):
 
         time = self.get_time(time_model, date)
         if time:
-            if time.is_fail():
-                time.delete() # TODO: don't delete fully ever, can allow cheating
-            else:
-                time.seconds = None
-                time.save()
+            time.seconds = None
+            time.save()
 
     def streaks(self, time_model, date):
         """Returns the full, forwards, and backwards streaks the user is on.
@@ -392,6 +392,8 @@ class StreakReward:
     def crossbucks_reward(self):
         return self.length * APP_SETTINGS['CROSSBUCKS_PER_SOLVE'] * 0.5
 
+
+# I don't love that slack messages are in models.py, this should probably go in a separate file
 
 STREAK_REWARDS = {
     # StreakReward(length = 1, messages = [
