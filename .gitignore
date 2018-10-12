@@ -22,11 +22,9 @@ secrets
 secrets.py
 keys.py
 
-# ignore user-uploaded files
-uploaded_files
-
 # django stuff
-static
+collected_static
+uploaded_media
 venv
 
 # sublime stuff

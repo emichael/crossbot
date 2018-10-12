@@ -1,4 +1,4 @@
-from crossbot.models import Hat
+from crossbot.models import Item
 
 def init(client):
     parser = client.parser.subparsers.add_parser('hat', help='Put on a hat.')
@@ -22,11 +22,12 @@ def hat(request):
         request.reply("Hat removed.")
         return
 
-    try:
-        hat_item = Hat.objects.get(name=args.hat)
-    except Hat.DoesNotExist:
+    hat_item = Item.from_key(args.hat)
+
+    if not hat_item:
         request.reply("{} does not exist".format(args.hat))
         return
+
     if request.user.don(hat_item):
         request.reply("You donned a {}".format(args.hat))
     else:

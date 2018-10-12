@@ -29,8 +29,12 @@ DEBUG = bool(int(os.environ.get('DJANGO_DEBUG', True)))
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATIC_URL = '/testbot/static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = 'collected_static'
+
+MEDIA_ROOT = 'uploaded_media'
+MEDIA_URL = '/media/'
+
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -42,7 +46,6 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     'crossbot.apps.CrossbotConfig',
-    'solo.apps.SoloAppConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -142,8 +145,3 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
-
-# Setup for keeping FileFields and ImageFields
-MEDIA_ROOT = 'uploaded_files'
-MEDIA_URL = '/media/'

@@ -5,16 +5,13 @@ import random
 
 from copy import copy
 
+import yaml
+
 from django.contrib.auth.models import User
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.db import models
-from solo.models import SingletonModel
 
-from crossbot.settings import CROSSBUCKS_PER_SOLVE
-
-
-class CrossbotSettings(SingletonModel):
-    """Crossbot settings, editable through the admin interface."""
-    item_drop_rate = models.FloatField(default=0.1) # 0.0 - 1.0
+from crossbot.settings import APP_SETTINGS
 
 
 # TODO: switch from return codes to exceptions to help with transactions???
@@ -40,8 +37,7 @@ class CBUser(models.Model):
     # That does open up some holes as to how to handle giving away your current
     # hat. Maybe you "give" it from your inventory to the hat slot? So equipped
     # items are not owned?
-    hat = models.ForeignKey('Hat', null=True, blank=True,
-                            on_delete=models.SET_NULL)
+    hat = models.CharField(max_length=20, null=True, blank=True)
     crossbucks = models.IntegerField(default=0)
 
     @classmethod
@@ -202,6 +198,9 @@ class CBUser(models.Model):
         Returns:
             Whether or not the hat was sucessfully put on.
         """
+        assert isinstance(hat, Item)
+        assert hat.is_hat()
+
         if self.quantity_owned(hat) > 0:
             self.hat = hat
             self.save()
@@ -277,7 +276,7 @@ class CBUser(models.Model):
             crossbucks_earned = 0
             item = None
         else:
-            crossbucks_earned = CROSSBUCKS_PER_SOLVE
+            crossbucks_earned = APP_SETTINGS['CROSSBUCKS_PER_SOLVE']
             self.crossbucks += crossbucks_earned
             self.save()
 
@@ -489,17 +488,40 @@ class QueryShorthand(models.Model):
         return '{} - {}'.format(self.name, self.user)
 
 
-def _item_image_upload_path(instance, filename):
-    return 'itemimages/%s.%s' % (instance.name, filename.split('.')[-1])
+class ItemOwnershipRecord(models.Model):
+    class Meta:
+        unique_together = (('owner', 'item'),)
 
-class Item(models.Model):
-    name = models.CharField(max_length=100, primary_key=True)
-    # TODO: add more validation to the image field, auto_convert it, etc.
-    # TODO: figure out how to actually serve static files properly, including
-    #       user-uploaded files
-    image = models.ImageField(upload_to=_item_image_upload_path, null=True)
-    droppable = models.BooleanField(default=True)
-    rarity = models.FloatField(default=1.0) # Simply a weight
+    owner = models.ForeignKey(CBUser, models.CASCADE)
+    item = models.CharField(max_length=20)
+    quantity = models.IntegerField(default=0)
+
+
+################################################################################
+# Items are stored in YAML (not the DB) but loaded here for convenience
+################################################################################
+
+class Item:
+    ITEMS = {}
+
+    def __init__(self, key, options):
+        self.key = key
+        self.name = options['name']
+        # use setattr and defaults in getter methods?
+        self.droppable = options.get('droppable', True)
+        self.image_name = options.get('image_name', None)
+        self.rarity = options.get('rarity', 1.0)
+        self.type = options.get('type', None)
+
+    @classmethod
+    def load_items(cls):
+        with open('crossbot/items.yaml') as f:
+            for key, options in yaml.load(f).items():
+                cls.ITEMS[key] = Item(key, options)
+
+    @classmethod
+    def from_key(cls, key):
+        return cls.ITEMS.get(key, None)
 
     @classmethod
     def choose_droppable(cls):
@@ -514,27 +536,30 @@ class Item(models.Model):
         Returns:
             An Item or None.
         """
-        if random.random() > CrossbotSettings.get_solo().item_drop_rate:
+
+        if random.random() > APP_SETTINGS['ITEM_DROP_RATE']:
             return None
 
-        droppables = cls.objects.filter(droppable=True)
+        print('blarg', cls.ITEMS)
 
-        if not droppables.exists():
+        droppables = [item for item in cls.ITEMS.values() if item.droppable]
+
+        if not droppables:
             return None
 
         return random.choices(droppables,
                               [item.rarity for item in droppables])[0]
 
+    def image_url(self):
+        if not self.image_name:
+            return None
+        return static('img/itemimages/%s' % self.image_name)
+
+    def is_hat(self):
+        return self.type == 'hat'
+
     def __str__(self):
         return self.name
 
-class Hat(Item):
-    pass
-
-class ItemOwnershipRecord(models.Model):
-    class Meta:
-        unique_together = (('owner', 'item'),)
-
-    owner = models.ForeignKey(CBUser, models.CASCADE)
-    item = models.ForeignKey(Item, models.CASCADE)
-    quantity = models.IntegerField(default=0)
+# Load all the items into memory
+Item.load_items()

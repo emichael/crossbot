@@ -23,6 +23,6 @@ urlpatterns = [
     path('slack/', include('crossbot.urls')),
 ]
 
-# TODO: setup a way to serve static files and uploaded files in production (NGINX?)
+# Serve uploaded media in
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
