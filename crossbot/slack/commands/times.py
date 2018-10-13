@@ -1,7 +1,7 @@
 from django.utils import timezone
 
-import crossbot
-from crossbot.commands.add import emoji
+from . import parse_date
+from .add import emoji
 
 
 def init(client):
@@ -13,7 +13,7 @@ def init(client):
         'date',
         nargs   = '?',
         default = 'now',
-        type    = crossbot.date,
+        type    = parse_date,
         help    = 'Date to get times for.')
 
 
@@ -45,7 +45,7 @@ def times(request):
     date_str = args.date.strftime('%a, %b %d, %Y')
 
     if len(response) == 0:
-        if args.date == crossbot.parser.date('now'):
+        if args.date == parse_date('now'):
             response = 'No times yet today. Be the first!'
         else:
             response = 'No times for ' + date_str

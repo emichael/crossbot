@@ -1,8 +1,7 @@
 import sqlite3
 from datetime import datetime, timedelta
 
-import crossbot
-from ..parser import date
+from . import parse_date
 
 def init(client):
 
@@ -26,17 +25,17 @@ def get_missed(request):
     completed = set(e.date for e in all_entries)
 
     # find missed day
-    d = date('now')
+    date = parse_date('now')
     n = request.args.n
     missed = []
     for i in range(n):
-        while d in completed:
-            d -= timedelta(days=1)
-        missed.append(d)
-        d -= timedelta(days=1)
+        while date in completed:
+            date -= timedelta(days=1)
+        missed.append(date)
+        date -= timedelta(days=1)
 
     urls = [
-        mini_url.format(d.year, d.month, d.day)
-        for d in missed
+        mini_url.format(date.year, date.month, date.day)
+        for date in missed
     ]
     request.reply('\n'.join(urls))

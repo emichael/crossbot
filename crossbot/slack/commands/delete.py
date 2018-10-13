@@ -1,6 +1,6 @@
 import sqlite3
 
-import crossbot
+from . import parse_date
 
 def init(client):
 
@@ -11,7 +11,7 @@ def init(client):
         'date',
         nargs   = '?',
         default = 'now',
-        type    = crossbot.date,
+        type    = parse_date,
         help    = 'Date to delete a score for.')
 
     # TODO add a command-line only --user parameter

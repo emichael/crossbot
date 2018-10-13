@@ -1,6 +1,6 @@
 from django.utils import timezone
 
-import crossbot
+from . import parse_date
 
 def init(client):
 
@@ -12,7 +12,7 @@ def init(client):
         'date',
         nargs   = '?',
         default = 'now',
-        type    = crossbot.date,
+        type    = parse_date,
         help    = 'Date to announce for.')
 
 def best(table, date, offset=0):

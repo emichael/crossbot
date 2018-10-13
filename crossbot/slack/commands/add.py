@@ -4,7 +4,7 @@ from random import choice
 
 from django.utils import timezone
 
-import crossbot
+from . import parse_date, parse_time
 
 
 def init(client):
@@ -14,14 +14,14 @@ def init(client):
 
     parser.add_argument(
         'time',
-        type    = crossbot.time,
+        type    = parse_time,
         help    = 'Score to add. eg. ":32", "2:45", "fail"')
 
     parser.add_argument(
         'date',
         nargs   = '?',
         default = 'now',
-        type    = crossbot.date,
+        type    = parse_date,
         help    = 'Date to add a score for.')
 
     # TODO add a command-line only --user parameter

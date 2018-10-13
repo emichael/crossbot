@@ -1,7 +1,6 @@
 import re
 import sqlite3
 from datetime import datetime
-import crossbot
 from multiprocessing import Pool, TimeoutError
 
 from . import sql

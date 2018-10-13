@@ -4,7 +4,6 @@ import re
 from multiprocessing import Pool, TimeoutError
 
 from crossbot.models import MiniCrosswordTime
-import crossbot
 
 
 def init(client):

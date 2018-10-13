@@ -1,3 +1,8 @@
+# Make these utilities available to commands
+from ..parser import date as parse_date
+from ..parser import time as parse_time
+from ..parser import date_fmt
+
 # from https://stackoverflow.com/a/3365846
 import importlib
 import pkgutil

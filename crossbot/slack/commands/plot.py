@@ -14,9 +14,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-import crossbot
 
-from ..parser import date_fmt
+from . import date_fmt
 
 
 def init(client):
