@@ -175,9 +175,9 @@ class SlackAppTests(PatchingTestCase):
                                     HTTP_X_SLACK_SIGNATURE=b'')
         self.assertEqual(response.status_code, 400)
 
-    def slack_post(self, text, who='alice'):
+    def slack_post(self, text, who='alice', expected_status_code = 200, expected_response_type='ephemeral'):
 
-        return self.post_valid_request({
+        response = self.post_valid_request({
             'type': 'event_callback',
             'text': text,
             'response_url': 'foobar',
@@ -187,14 +187,16 @@ class SlackAppTests(PatchingTestCase):
             'user_name': '@' + who,
         })
 
-    def test_add(self):
-
-        response = self.slack_post(text='add :10')
-
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, expected_status_code)
 
         body = json.loads(response.content)
-        self.assertEqual(body['response_type'], 'ephemeral')
+        self.assertEqual(body['response_type'], expected_response_type)
+
+        return body
+
+    def test_add(self):
+
+        self.slack_post(text='add :10')
 
         alice = CBUser.objects.get(slackid='UALICE')
 
@@ -203,16 +205,11 @@ class SlackAppTests(PatchingTestCase):
     def test_double_add(self):
 
         # two adds on the same day should trigger an error
-        response = self.slack_post(text='add :10 2018-08-01')
+        self.slack_post(text='add :10 2018-08-01')
         response = self.slack_post(text='add :11 2018-08-01')
 
-        self.assertEqual(response.status_code, 200)
-
-        body = json.loads(response.content)
-        self.assertEqual(body['response_type'], 'ephemeral')
-
         # make sure the error message refers to the previous time
-        self.assertIn(':10', body['text'])
+        self.assertIn(':10', response['text'])
 
         alice = CBUser.objects.get(slackid='UALICE')
 
@@ -229,11 +226,8 @@ class SlackAppTests(PatchingTestCase):
 
         # check date parsing here too
         response = self.slack_post('times 2018-8-1')
-        body = json.loads(response.content)
 
-        self.assertEqual(body['response_type'], 'ephemeral')
-
-        lines = body['text'].split('\n')
+        lines = response['text'].split('\n')
 
         # line 0 is date, line 1 should be alice
         self.assertIn('alice', lines[1])
@@ -244,12 +238,12 @@ class SlackAppTests(PatchingTestCase):
 
         # Alice must find a foohat
         response = self.slack_post('add :15 2018-08-01', who='alice')
-        self.assertIn("Tophat", json.loads(response.content)['text'])
+        self.assertIn("Tophat", response['text'])
 
         # Alice can put it on
         response = self.slack_post('hat tophat', who='alice')
-        self.assertIn("donned", json.loads(response.content)['text'])
+        self.assertIn("donned", response['text'])
 
         # Bob can't
         response = self.slack_post('hat tophat', who='bob')
-        self.assertNotIn("donned", json.loads(response.content)['text'])
+        self.assertNotIn("donned", response['text'])
