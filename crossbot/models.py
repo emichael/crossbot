@@ -8,6 +8,8 @@ from copy import copy
 
 import yaml
 
+import settings
+
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.db import models, transaction
@@ -627,7 +629,7 @@ class Item:
 
     @classmethod
     def load_items(cls):
-        with open('crossbot/items.yaml') as f:
+        with open(settings.base_path('crossbot/items.yaml')) as f:
             for key, options in yaml.load(f).items():
                 cls.ITEMS[key] = Item(key, options)
 

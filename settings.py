@@ -16,6 +16,9 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+def base_path(p):
+    return os.path.join(BASE_DIR, p)
+
 # TODO maybe use USE_X_FORWARDED_HOST
 # FORCE_SCRIPT_NAME = '/testbot'
 
