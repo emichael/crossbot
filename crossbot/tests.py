@@ -149,7 +149,6 @@ class SlackAppTests(PatchingTestCase):
 
         # check date parsing here too
         response = self.slack_post('times 2018-8-1')
-        print(response)
         body = json.loads(response.content)
 
         self.assertEqual(body['response_type'], 'ephemeral')
