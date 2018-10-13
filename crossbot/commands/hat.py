@@ -1,4 +1,7 @@
+import logging
 from crossbot.models import Item
+
+logger = logging.getLogger(__name__)
 
 def init(client):
     parser = client.parser.subparsers.add_parser('hat', help='Put on a hat.')
@@ -33,4 +36,4 @@ def hat(request):
     else:
         request.reply("You don't own a {}".format(args.hat))
 
-        print("{} put on a {}".format(request.user, args.hat))
+        logger.info("%s put on a %s", request.user, args.hat)

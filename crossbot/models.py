@@ -2,6 +2,7 @@
 
 import datetime
 import random
+import logging
 
 from copy import copy
 
@@ -13,6 +14,8 @@ from django.db import models, transaction
 from django.db.models import Q
 
 from crossbot.settings import APP_SETTINGS
+
+logger = logging.getLogger(__name__)
 
 
 # TODO: switch from return codes to exceptions to help with transactions???
@@ -648,8 +651,6 @@ class Item:
 
         if random.random() > APP_SETTINGS['ITEM_DROP_RATE']:
             return None
-
-        print('blarg', cls.ITEMS)
 
         droppables = [item for item in cls.ITEMS.values() if item.droppable]
 

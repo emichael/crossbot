@@ -1,4 +1,5 @@
 import math
+import logging
 
 from random import choice
 
@@ -6,6 +7,7 @@ from django.utils import timezone
 
 import crossbot
 
+logger = logging.getLogger(__name__)
 
 def init(client):
 
@@ -61,7 +63,7 @@ def add(request):
                 # try here because we might fail if the reaction already exists.
                 request.react("achievement")
             except:
-                print("Achievement reaction failed!")
+                logger.warning("Achievement reaction failed!")
             request.reply(msg)
 
     if crossbucks_earned:
@@ -70,7 +72,7 @@ def add(request):
     if item_dropped:
         request.reply("Found a {}".format(item_dropped))
 
-    print("{} has a streak of {} in {}".format(request.user, new_sc, args.table))
+    logger.info("%s has a streak of %d in %s", request.user, new_sc, args.table.__name__)
 
     # if args.table == 'mini_crossword_time':
     #     requests.post('http://plseaudio.cs.washington.edu:8087/scroll_text',
