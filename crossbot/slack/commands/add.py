@@ -1,10 +1,14 @@
 import math
+import logging
 
 from random import choice
 
 from django.utils import timezone
 
 from . import models, parse_date, parse_time
+
+
+logger = logging.getLogger(__name__)
 
 
 def init(client):
@@ -60,10 +64,10 @@ def add(request):
                 # try here because we might fail if the reaction already exists.
                 request.react("achievement")
             except:
-                print("Achievement reaction failed!")
+                logger.warning("Achievement reaction failed!")
             request.reply(msg)
 
-    print("{} has a streak of {} in {}".format(request.user, new_sc, args.table))
+    logger.debug("{} has a streak of {} in {}".format(request.user, new_sc, args.table))
 
     # if args.table == 'mini_crossword_time':
     #     requests.post('http://plseaudio.cs.washington.edu:8087/scroll_text',

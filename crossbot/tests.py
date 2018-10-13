@@ -9,7 +9,6 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 from django.urls import reverse
 
-from crossbot.settings import APP_SETTINGS
 from crossbot.slack.commands import parse_date
 from crossbot.slack.api import SLACK_URL
 from crossbot.views import slash_command
@@ -81,13 +80,6 @@ class SlackTestCase(MockedRequestTestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
         return patcher
-
-    def patch_app_settings(self, key, value):
-        old_value = APP_SETTINGS[key]
-        def cleanup():
-            APP_SETTINGS[key] = old_value
-        APP_SETTINGS[key] = value
-        self.addCleanup(cleanup)
 
     def check_headers(self, method, url, headers):
         if url.startswith(SLACK_URL):

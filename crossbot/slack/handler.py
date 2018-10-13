@@ -51,14 +51,14 @@ class Request:
         self.text = text
 
     def react(self, emoji):
-        print('react :{}:'.format(emoji))
+        logger.debug('react :{}:'.format(emoji))
 
     def reply(self, msg, direct=False):
         prefix = '@user - ' if direct else ''
-        print(prefix + msg)
+        logger.debug(prefix + msg)
 
     def upload(self, name, path):
-        print(path)
+        logger.debug(path)
 
 
 class SlashCommandRequest:

@@ -22,9 +22,9 @@ def validate_slack_request(request):
         return False
 
     my_signature = 'v0=' + hmac.new(
-        key = keys.SLACK_SECRET_SIGNING_KEY,
-        msg = b'v0:' + bytes(timestamp, 'utf8') + b':' + request.body,
-        digestmod = hashlib.sha256
+        key=keys.SLACK_SECRET_SIGNING_KEY,
+        msg=b'v0:' + bytes(timestamp, 'utf8') + b':' + request.body,
+        digestmod=hashlib.sha256
     ).hexdigest()
 
     slack_signature = request.META['HTTP_X_SLACK_SIGNATURE']
