@@ -225,8 +225,3 @@ class SlackAppTests(SlackTestCase):
         # line 0 is date, line 1 should be alice
         self.assertIn('alice', lines[1])
         self.assertIn(':fire:', lines[1])
-
-    def test_streak(self):
-        self.slack_post('add :15 2018-01-01', who='alice')
-        self.slack_post('add :15 2018-01-02', who='alice')
-        response = self.slack_post('add :15 2018-01-03', who='alice')
