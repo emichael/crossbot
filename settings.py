@@ -166,3 +166,9 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+import warnings
+warnings.filterwarnings(
+    'error', r"DateTimeField .* received a naive datetime",
+    RuntimeWarning, r'django\.db\.models\.fields',
+)

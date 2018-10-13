@@ -14,6 +14,7 @@ from django.contrib.auth.models import User
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.db import models, transaction
 from django.db.models import Q
+from django.utils import timezone
 
 from crossbot.settings import APP_SETTINGS
 
@@ -278,7 +279,7 @@ class CBUser(models.Model):
             user=self,
             date=date,
             defaults={'seconds': seconds,
-                      'timestamp': datetime.datetime.now()})
+                      'timestamp': timezone.now()})
 
         # Don't award prizes for fails or added-then-deleted entries
         if time.is_fail() or not created:
