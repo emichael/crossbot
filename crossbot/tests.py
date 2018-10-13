@@ -10,8 +10,7 @@ from django.test.client import RequestFactory
 from django.urls import reverse
 
 from crossbot import date
-from crossbot.models import CrossbotSettings, CBUser, Hat
-from crossbot.settings import CROSSBUCKS_PER_SOLVE
+from crossbot.models import CBUser
 from crossbot.views import slash_command
 
 # Create your tests here.

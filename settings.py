@@ -42,7 +42,6 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     'crossbot.apps.CrossbotConfig',
-    'solo.apps.SoloAppConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

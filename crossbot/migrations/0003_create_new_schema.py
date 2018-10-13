@@ -63,22 +63,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='Item',
-            fields=[
-                ('name', models.CharField(max_length=100, primary_key=True, serialize=False)),
-                ('emoji_str', models.CharField(max_length=100)),
-                ('droppable', models.BooleanField(default=True)),
-                ('rarity', models.FloatField(default=1.0)),
-            ],
-        ),
-        migrations.CreateModel(
-            name='ItemOwnershipRecord',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('quantity', models.IntegerField(default=0)),
-            ],
-        ),
-        migrations.CreateModel(
             name='TempQueryShorthand',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
