@@ -16,7 +16,7 @@ import matplotlib.dates as mdates
 
 import crossbot
 
-from crossbot.parser import date_fmt
+from ..parser import date_fmt
 
 
 def init(client):

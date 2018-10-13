@@ -1,9 +1,10 @@
 import re
-from crossbot.commands import sql
 import sqlite3
 from datetime import datetime
 import crossbot
 from multiprocessing import Pool, TimeoutError
+
+from . import sql
 
 def init(client):
     parser = client.parser.subparsers.add_parser('query', help='Run a saved query')

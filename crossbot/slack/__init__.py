@@ -1,5 +1,7 @@
 from .handler import Handler, SlashCommandRequest
 
+_HANDLER = Handler()
+
 def handle_slash_command(slash_command):
     """Convenience methods used to handle slash commands.
 
@@ -9,8 +11,6 @@ def handle_slash_command(slash_command):
     Returns:
         A Response object or None. (??)
     """
-
-    handler = Handler()
     request = SlashCommandRequest(slash_command)
 
-    return handler.handle_request(request)
+    return _HANDLER.handle_request(request)

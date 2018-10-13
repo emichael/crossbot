@@ -1,6 +1,7 @@
 import traceback
 
 from . import commands
+from .commands import COMMANDS
 from .parser import Parser
 from .api import *
 
@@ -28,7 +29,7 @@ class Handler:
         self.init_plugins()
 
     def init_plugins(self):
-        for mod_name in commands.__all__:
+        for mod_name in COMMANDS:
             try:
                 mod = getattr(commands, mod_name)
 
