@@ -7,8 +7,6 @@ from copy import copy
 from django.contrib.auth.models import User
 from django.db import models
 
-from crossbot.settings import CROSSBUCKS_PER_SOLVE
-
 
 # TODO: switch from return codes to exceptions to help with transactions???
 #       or, we can use set_rollback

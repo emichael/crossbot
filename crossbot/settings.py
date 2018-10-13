@@ -1,4 +1,4 @@
-bot_name = 'crossbot'
+# bot_name = 'crossbot'
 
-# relative
-db_path = 'crossbot.db'
+# # relative
+# db_path = 'crossbot.db'

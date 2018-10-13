@@ -1,8 +1,5 @@
 from django.conf import settings
-from django.db import migrations, models
-from django.contrib.auth import get_user_model
-import django.db.models.deletion
-
+from django.db import migrations
 
 TIME_MODELS = ['CrosswordTime', 'MiniCrosswordTime', 'EasySudokuTime']
 

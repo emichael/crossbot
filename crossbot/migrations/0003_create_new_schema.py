@@ -53,16 +53,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='CrossbotSettings',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('item_drop_rate', models.FloatField(default=0.1)),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
             name='TempQueryShorthand',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -115,23 +105,6 @@ class Migration(migrations.Migration):
             name='modelparams',
             options={'managed': False, 'verbose_name_plural': 'ModelParams'},
         ),
-        migrations.CreateModel(
-            name='Hat',
-            fields=[
-                ('item_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='crossbot.Item')),
-            ],
-            bases=('crossbot.item',),
-        ),
-        migrations.AddField(
-            model_name='itemownershiprecord',
-            name='item',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='crossbot.Item'),
-        ),
-        migrations.AddField(
-            model_name='itemownershiprecord',
-            name='owner',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='crossbot.CBUser'),
-        ),
         migrations.AlterUniqueTogether(
             name='tempminicrosswordtime',
             unique_together={('user', 'date')},
@@ -143,14 +116,5 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name='tempcrosswordtime',
             unique_together={('user', 'date')},
-        ),
-        migrations.AlterUniqueTogether(
-            name='itemownershiprecord',
-            unique_together={('owner', 'item')},
-        ),
-        migrations.AddField(
-            model_name='cbuser',
-            name='hat',
-            field=models.ForeignKey(null=True,  blank=True, on_delete=django.db.models.deletion.SET_NULL, to='crossbot.Hat'),
         ),
     ]
