@@ -13,4 +13,5 @@ def handle_slash_command(slash_command):
     """
     request = SlashCommandRequest(slash_command)
 
-    return _HANDLER.handle_request(request)
+    _HANDLER.handle_request(request)
+    return request.response_json()

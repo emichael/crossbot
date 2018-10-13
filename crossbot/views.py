@@ -66,7 +66,6 @@ def slash_command(request):
         print(response)
         if response:
             return JsonResponse(response)
-        else:
-            return HttpResponse('OK: ' + request.POST['text'])
+        return HttpResponse('OK: ' + request.POST['text'])
 
     return HttpResponse('this is the slack endpoint')
