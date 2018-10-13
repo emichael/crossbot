@@ -1,9 +1,13 @@
+import logging
 import traceback
 
 from . import commands
 from .commands import COMMANDS
 from .parser import Parser
 from .api import *
+
+
+logger = logging.getLogger(__name__)
 
 
 class Handler:
@@ -20,9 +24,9 @@ class Handler:
                 if hasattr(mod, 'init'):
                     mod.init(self)
                 else:
-                    print('WARNING: plugin "{}" has no init()'.format(mod.__name__))
+                    logging.warning('plugin "%s" has no init()', mod.__name__)
             except:
-                print('ERROR: Something went wrong when importing "{}"'.format(mod_name))
+                logging.error('Something went wrong when importing "%s"', mod_name)
                 traceback.print_exc()
 
     def handle_request(self, request, parse=True):

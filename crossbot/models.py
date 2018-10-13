@@ -1,11 +1,14 @@
 """Crossbot Django models."""
 
 import datetime
+import logging
 
 from copy import copy
 
 from django.contrib.auth.models import User
 from django.db import models
+
+logger = logging.getLogger(__name__)
 
 
 # TODO: switch from return codes to exceptions to help with transactions???

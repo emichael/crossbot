@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import time
+import logging
 
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -8,6 +9,8 @@ from django.views.decorators.csrf import csrf_exempt
 import keys
 
 from .slack import handle_slash_command
+
+logger = logging.getLogger(__name__)
 
 # taken from https://api.slack.com/docs/verifying-requests-from-slack#a_recipe_for_security
 def validate_slack_request(request):
@@ -51,19 +54,19 @@ def event(request):
 
         #     cbreq = crossbot.slack.SlackEventRequest(data)
         #     cb.handle_request(cbreq)
-        #     print(response)
+        #     logger.debug('Response: %s', response)
         #     return JsonResponse(response)
+
 
 @csrf_exempt
 def slash_command(request):
+    logger.debug('Request: %s', request)
     if request.method == 'POST':
         if not validate_slack_request(request):
             return HttpResponseBadRequest("Failed to validate")
 
-        print(request.POST)
         response = handle_slash_command(request.POST)
-
-        print(response)
+        logger.debug('Slash command response: %s', response)
         if response:
             return JsonResponse(response)
         return HttpResponse('OK: ' + request.POST['text'])

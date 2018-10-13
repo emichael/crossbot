@@ -95,17 +95,35 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
+        'console': {
+            'level': os.environ.get('LOGLEVEL', 'INFO').upper(),
+            'class': 'logging.StreamHandler',
+        },
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': 'debug.log',
         },
+        'null': {
+            'class':'logging.NullHandler',
+        },
     },
     'loggers': {
+        'crossbot': {
+            'level': 'DEBUG',
+            'propagate': True,
+            'handlers': ['console', 'file']
+        },
         'django': {
             'handlers': ['file'],
             'level': 'DEBUG',
             'propagate': True,
+        },
+        # make the sql logs chill out
+        'django.db.backends': {
+            'handlers': ['null'],
+            'propagate': False,
+            'level':'DEBUG',
         },
     },
 }
