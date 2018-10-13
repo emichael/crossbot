@@ -10,9 +10,8 @@ from django.test.client import RequestFactory
 from django.urls import reverse
 
 from crossbot.models import CBUser
+from crossbot.slack.commands import parse_date
 from crossbot.views import slash_command
-
-from .slack.commands import parse_date
 
 # Create your tests here.
 

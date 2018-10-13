@@ -69,7 +69,4 @@ def slash_command(request):
         else:
             return HttpResponse('OK: ' + request.POST['text'])
 
-
-        return HttpResponse('OK: ' + request.POST['text'])
-
     return HttpResponse('this is the slack endpoint')
