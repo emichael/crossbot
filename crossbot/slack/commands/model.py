@@ -1,7 +1,9 @@
 import sqlite3
-from datetime import datetime
-import crossbot
 import math
+
+from datetime import datetime
+
+from . import DB_PATH
 
 def init(client):
     parser = client.parser.subparsers.add_parser('model', help='Run a saved query')
@@ -17,7 +19,7 @@ def model(client, request):
         request.reply("Error: no known model command `{}`".format(request.args.cmd))
 
 def sqlselect(table, fields, one=False):
-    with sqlite3.connect(crossbot.db_path) as con:
+    with sqlite3.connect(DB_PATH) as con:
         print("select {} from {}".format(', '.join(fields), table))
         res = con.execute("select {} from {}".format(', '.join(fields), table))
         return res.fetchone() if one else res.fetchall()
@@ -27,7 +29,7 @@ def details(client):
     return "*Last model run*: {:%Y-%m-%d %H:%M}\n*log(P)* = {}".format(datetime.fromtimestamp(when), lp)
 
 def validate(client):
-    with sqlite3.connect(crossbot.db_path) as con:
+    with sqlite3.connect(DB_PATH) as con:
         res = con.execute("select seconds, prediction from mini_crossword_time natural join mini_crossword_model")
         secs, predictions = zip(*res.fetchall())
     lsecs = [math.log(s if 0 < s < 300 else 300) for s in secs]

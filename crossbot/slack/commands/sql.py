@@ -3,8 +3,7 @@ import html
 import re
 from multiprocessing import Pool, TimeoutError
 
-from crossbot.models import MiniCrosswordTime
-
+from . import models, DB_PATH
 
 def init(client):
 
@@ -24,7 +23,7 @@ SAFE_SQL_OPS = (
 )
 
 ALLOWED_TABLES = {
-    MiniCrosswordTime._meta.db_table: ["mini_crossword_time"]
+    models.MiniCrosswordTime._meta.db_table: ["mini_crossword_time"]
 }
 
 def replace_table_names(query):
@@ -63,7 +62,7 @@ def fmt_tup(tup):
     return ', '.join(fmt_elem(elem) for elem in tup)
 
 def do_sql(cmd, *args):
-    with sqlite3.connect(crossbot.db_path) as con:
+    with sqlite3.connect(DB_PATH) as con:
         con.set_authorizer(allow_only_select)
         con.create_function('user_str', 1, user_str)
         try:
@@ -87,8 +86,7 @@ def format_sql_cmd(cmd):
     return replace_table_names(cmd)
 
 def user_str(pk):
-    from crossbot.models import MyUser
-    u = MyUser.objects.get(pk=pk)
+    u = models.CBUser.objects.get(pk=pk)
     return str(u)
 
 def format_sql_result(result, client):

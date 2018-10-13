@@ -4,7 +4,7 @@ from random import choice
 
 from django.utils import timezone
 
-from . import parse_date, parse_time
+from . import models, parse_date, parse_time
 
 
 def init(client):
@@ -155,11 +155,11 @@ SPEED_EMOJI = [
 
 def emoji(time, table, day_of_week):
 
-    if table == crossbot.models.MiniCrosswordTime:
+    if table == models.MiniCrosswordTime:
         times_list = MINI_TIMES
-    elif table == crossbot.models.CrosswordTime:
+    elif table == models.CrosswordTime:
         times_list = REGULAR_TIMES
-    elif table == crossbot.models.EasySudokuTime:
+    elif table == models.EasySudokuTime:
         times_list = SUDOKU_TIMES
     else:
         raise RuntimeError('Unknown table {}'.format(table))

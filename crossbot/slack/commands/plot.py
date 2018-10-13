@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
 
-from . import date_fmt
+from . import parse_date, date_fmt, DB_PATH
 
 
 def init(client):
@@ -92,7 +92,7 @@ def init(client):
 
     dates = parser.add_argument_group('Date range')
 
-    def date_none(date_str): return crossbot.date(date_str, default=None)
+    def date_none(date_str): return parse_date(date_str, default=None)
 
     dates.add_argument(
         '--start-date',
@@ -159,7 +159,7 @@ def plot(client, request):
         else:
             end_dt = start_dt + delta
     else:
-        end_dt = date_dt(end_date if end_date else crossbot.date('now'))
+        end_dt = date_dt(end_date if end_date else parse_date('now'))
         start_dt = end_dt - delta
 
     # reformat the dates based on the above dt calculations
@@ -189,7 +189,7 @@ def plot(client, request):
         start_dt -= datetime.timedelta(days=int(1 / (1 - args.smooth)))
         start_date = start_dt.strftime(date_fmt)
 
-    with sqlite3.connect(crossbot.db_path) as con:
+    with sqlite3.connect(DB_PATH) as con:
         query = '''
         SELECT userid, date, seconds
         FROM {}

@@ -3,10 +3,14 @@ from ..parser import date as parse_date
 from ..parser import time as parse_time
 from ..parser import date_fmt
 
+from ... import models
+
 # from https://stackoverflow.com/a/3365846
 import importlib
 import pkgutil
 
+
+DB_PATH = 'crossbot.db' # TODO: import from top-level djando settings
 
 COMMANDS = []
 for _, module_name, _ in  pkgutil.walk_packages(__path__):

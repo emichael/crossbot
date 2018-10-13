@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime
 from multiprocessing import Pool, TimeoutError
 
-from . import sql
+from . import sql, models, DB_PATH
 
 def init(client):
     parser = client.parser.subparsers.add_parser('query', help='Run a saved query')
@@ -36,7 +36,7 @@ def linkify_dates(s):
 def query(request):
     # if request.args.save:
     #     cmd = sql.format_sql_cmd(" ".join(request.args.params))
-    #     with sqlite3.connect(crossbot.db_path) as con:
+    #     with sqlite3.connect(DB_PATH) as con:
     #         query = '''
     #         INSERT OR REPLACE INTO query_shorthands(name, command, userid, timestamp)
     #         VALUES(?, ?, ?, ?)
@@ -45,7 +45,7 @@ def query(request):
     #     request.reply("Saved new query `{}` from {}".format(request.args.name, client.user(request.userid)))
     if request.args.name:
         params = [sql.format_sql_cmd(param) for param in request.args.params]
-        result = crossbot.models.QueryShorthands.objects.get(name=request.args.name)
+        result = models.QueryShorthands.objects.get(name=request.args.name)
         print(result)
         if result:
             cmd = sql.format_sql_cmd(result.command)
@@ -62,7 +62,7 @@ def query(request):
         else:
             request.reply("No known command `{}`".format(request.args.name))
     else:
-        with sqlite3.connect(crossbot.db_path) as con:
+        with sqlite3.connect(DB_PATH) as con:
             queries = con.execute('''
             SELECT name, userid, timestamp, command FROM query_shorthands
             ''').fetchall()
