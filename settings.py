@@ -160,7 +160,8 @@ USE_L10N = True
 
 USE_TZ = True
 
-
-# Setup for keeping FileFields and ImageFields
-MEDIA_ROOT = 'uploaded_files'
-MEDIA_URL = '/media/'
+import warnings
+warnings.filterwarnings(
+    'error', r"DateTimeField .* received a naive datetime",
+    RuntimeWarning, r'django\.db\.models\.fields',
+)

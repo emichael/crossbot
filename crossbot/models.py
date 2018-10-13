@@ -7,6 +7,7 @@ from copy import copy
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +107,7 @@ class CBUser(models.Model):
         time = time_model.objects.create(user=self,
                                          date=date,
                                          seconds=seconds,
-                                         timestamp=datetime.datetime.now())
+                                         timestamp=timezone.now())
         return (True, time)
 
     def remove_time(self, time_model, date):
