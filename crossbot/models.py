@@ -98,7 +98,7 @@ class CBUser(models.Model):
 
         time = self.get_time(time_model, date)
         if time:
-            return (False, time, 0, None)
+            return (False, time)
 
         time = time_model.objects.create(user=self,
                                          date=date,
@@ -107,11 +107,7 @@ class CBUser(models.Model):
         return (True, time)
 
     def remove_time(self, time_model, date):
-        """Remove a time for this user.
-
-        Removes a time record for this user. If the record is not a fail, does
-        not delete the record entirely, to prevent people from cheating to get
-        more crossbucks/items.
+        """Remove a time record for this user.
 
         Args:
             time_model: Reference to the subclass of CommonTime to remove.
@@ -122,11 +118,7 @@ class CBUser(models.Model):
 
         time = self.get_time(time_model, date)
         if time:
-            if time.is_fail():
-                time.delete()
-            else:
-                time.seconds = None
-                time.save()
+            time.delete()
 
     def streaks(self, time_model, date):
         """Returns the full, forwards, and backwards streaks the user is on.

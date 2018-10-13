@@ -6,23 +6,6 @@ from .parser import Parser
 from .api import *
 
 
-class Request:
-    userid = 'command-line-user'
-
-    def __init__(self, text):
-        self.text = text
-
-    def react(self, emoji):
-        print('react :{}:'.format(emoji))
-
-    def reply(self, msg, direct=False):
-        prefix = '@user - ' if direct else ''
-        print(prefix + msg)
-
-    def upload(self, name, path):
-        print(path)
-
-
 class Handler:
     def __init__(self, limit_commands=False):
         self.parser = Parser(limit_commands)
@@ -55,6 +38,23 @@ class Handler:
             command = request.command
 
         return command(request)
+
+
+class Request:
+    userid = 'command-line-user'
+
+    def __init__(self, text):
+        self.text = text
+
+    def react(self, emoji):
+        print('react :{}:'.format(emoji))
+
+    def reply(self, msg, direct=False):
+        prefix = '@user - ' if direct else ''
+        print(prefix + msg)
+
+    def upload(self, name, path):
+        print(path)
 
 
 class SlashCommandRequest:

@@ -9,9 +9,10 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 from django.urls import reverse
 
-from crossbot import date
 from crossbot.models import CBUser
 from crossbot.views import slash_command
+
+from .slack.commands import parse_date
 
 # Create your tests here.
 
@@ -33,48 +34,37 @@ class ModelTests(TestCase):
 
     def test_add_time(self):
         alice = CBUser.from_slackid('UALICE', 'alice')
-        self.assertEqual(alice.crossbucks, 0)
 
-        a, t, cb, i = alice.add_mini_crossword_time(10, date(None))
+        a, t = alice.add_mini_crossword_time(10, parse_date(None))
         self.assertTrue(a)
         self.assertEqual(t.user, alice)
         self.assertEqual(t.seconds, 10)
-        self.assertEqual(t.date, date(None))
-        self.assertEqual(cb, CROSSBUCKS_PER_SOLVE)
-        self.assertEqual(alice.crossbucks, cb)
+        self.assertEqual(t.date, parse_date(None))
 
-        self.assertEqual(alice.get_mini_crossword_time(date(None)), t)
+        self.assertEqual(alice.get_mini_crossword_time(parse_date(None)), t)
 
     def test_add_remove_time(self):
         alice = CBUser.from_slackid('UALICE', 'alice')
-        self.assertEqual(alice.crossbucks, 0)
 
-        alice.add_mini_crossword_time(10, date(None))
-        self.assertEqual(alice.crossbucks, CROSSBUCKS_PER_SOLVE)
+        alice.add_mini_crossword_time(10, parse_date(None))
 
-        alice.remove_mini_crossword_time(date(None))
-        self.assertEqual(alice.crossbucks, CROSSBUCKS_PER_SOLVE)
-        self.assertEqual(alice.get_mini_crossword_time(date(None)), None)
+        alice.remove_mini_crossword_time(parse_date(None))
+        self.assertEqual(alice.get_mini_crossword_time(parse_date(None)), None)
 
-        a, t, cb, i = alice.add_mini_crossword_time(10, date(None))
+        a, t = alice.add_mini_crossword_time(10, parse_date(None))
         self.assertTrue(a)
         self.assertEqual(t.user, alice)
         self.assertEqual(t.seconds, 10)
-        self.assertEqual(t.date, date(None))
-        self.assertEqual(cb, 0)
-        self.assertEqual(i, None)
-        self.assertEqual(alice.crossbucks, CROSSBUCKS_PER_SOLVE)
-        self.assertNotEqual(alice.get_mini_crossword_time(date(None)), None)
+        self.assertEqual(t.date, parse_date(None))
+        self.assertNotEqual(alice.get_mini_crossword_time(parse_date(None)), None)
 
     def test_add_fail(self):
         alice = CBUser.from_slackid('UALICE', 'alice')
-        a, t, cb, i = alice.add_mini_crossword_time(-1, date(None))
+        a, t = alice.add_mini_crossword_time(-1, parse_date(None))
         self.assertTrue(a)
         self.assertEqual(t.seconds, -1)
-        self.assertEqual(t.date, date(None))
+        self.assertEqual(t.date, parse_date(None))
         self.assertTrue(t.is_fail())
-        self.assertEqual(cb, 0)
-        self.assertEqual(i, None)
 
 class SlackAppTests(PatchingTestCase):
 
@@ -85,7 +75,7 @@ class SlackAppTests(PatchingTestCase):
 
         self.patch('keys.SLACK_SECRET_SIGNING_KEY', self.slack_sk)
         # Make the slack api return an object with always returns 'ok'
-        self.patch('crossbot.slack._slack_api', MagicMock('ok'))
+        self.patch('crossbot.slack.api._slack_api', MagicMock('ok'))
 
     def post_valid_request(self, post_data):
         request = self.factory.post(reverse('slash_command'),
@@ -160,6 +150,7 @@ class SlackAppTests(PatchingTestCase):
 
         # check date parsing here too
         response = self.slack_post('times 2018-8-1')
+        print(response)
         body = json.loads(response.content)
 
         self.assertEqual(body['response_type'], 'ephemeral')
@@ -169,24 +160,3 @@ class SlackAppTests(PatchingTestCase):
         # line 0 is date, line 1 should be alice
         self.assertIn('alice', lines[1])
         self.assertIn(':fire:', lines[1])
-
-    def test_hat(self):
-        # First, make sure there's a droppable hat
-        hat = Hat.objects.create(name="foohat")
-
-        # Crank up the droprate to 100%
-        settings = CrossbotSettings.get_solo()
-        settings.item_drop_rate = 1.0
-        settings.save()
-
-        # Alice must find a foohat
-        response = self.slack_post('add :15 2018-08-01', who='alice')
-        self.assertIn("foohat", json.loads(response.content)['text'])
-
-        # Alice can put it on
-        response = self.slack_post('hat foohat', who='alice')
-        self.assertIn("donned", json.loads(response.content)['text'])
-
-        # Bob can't
-        response = self.slack_post('hat foohat', who='bob')
-        self.assertNotIn("donned", json.loads(response.content)['text'])

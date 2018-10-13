@@ -33,8 +33,7 @@ def add(request):
 
     args = request.args
 
-    was_added, time, crossbucks_earned, item_dropped = request.user.add_time(
-        args.table, args.time, args.date)
+    was_added, time = request.user.add_time(args.table, args.time, args.date)
 
     if not was_added:
         request.reply('I could not add this to the database, '
@@ -63,12 +62,6 @@ def add(request):
             except:
                 print("Achievement reaction failed!")
             request.reply(msg)
-
-    if crossbucks_earned:
-        request.reply("Earned CB${}".format(crossbucks_earned))
-
-    if item_dropped:
-        request.reply("Found a {}".format(item_dropped))
 
     print("{} has a streak of {} in {}".format(request.user, new_sc, args.table))
 
