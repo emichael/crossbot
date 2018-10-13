@@ -24,9 +24,9 @@ class Handler:
                 if hasattr(mod, 'init'):
                     mod.init(self)
                 else:
-                    logging.warning('plugin "%s" has no init()', mod.__name__)
+                    logger.warning('plugin "%s" has no init()', mod.__name__)
             except:
-                logging.error('Something went wrong when importing "%s"', mod_name)
+                logger.error('Something went wrong when importing "%s"', mod_name)
                 traceback.print_exc()
 
     def handle_request(self, request, parse=True):
