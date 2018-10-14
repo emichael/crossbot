@@ -202,14 +202,14 @@ class CommonTime(models.Model):
         abstract = True
 
     user = models.ForeignKey(CBUser, on_delete=models.CASCADE)
-    seconds = models.IntegerField(null=True)
+    seconds = models.IntegerField()
     date = models.DateField()
     timestamp = models.DateTimeField(null=True, auto_now_add=True)
 
     @classmethod
-    def non_null(cls):
-        """Return a query set with non-null times (i.e., non-deleted)."""
-        return cls.objects.filter(seconds__isnull=False)
+    def times_for_date(cls, date):
+        """Return a query set with all non-null times for a date."""
+        return cls.objects.filter(date=date)
 
     def is_fail(self):
         return self.seconds < 0

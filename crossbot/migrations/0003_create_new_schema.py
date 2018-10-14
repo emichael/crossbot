@@ -66,7 +66,7 @@ class Migration(migrations.Migration):
             name='TempCrosswordTime',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('seconds', models.IntegerField(null=True)),
+                ('seconds', models.IntegerField()),
                 ('date', models.DateField()),
                 ('timestamp', models.DateTimeField(auto_now_add=True, null=True)),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='crossbot.CBUser')),
@@ -79,7 +79,7 @@ class Migration(migrations.Migration):
             name='TempEasySudokuTime',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('seconds', models.IntegerField(null=True)),
+                ('seconds', models.IntegerField()),
                 ('date', models.DateField()),
                 ('timestamp', models.DateTimeField(auto_now_add=True, null=True)),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='crossbot.CBUser')),
@@ -92,7 +92,7 @@ class Migration(migrations.Migration):
             name='TempMiniCrosswordTime',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('seconds', models.IntegerField(null=True)),
+                ('seconds', models.IntegerField()),
                 ('date', models.DateField()),
                 ('timestamp', models.DateTimeField(auto_now_add=True, null=True)),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='crossbot.CBUser')),
