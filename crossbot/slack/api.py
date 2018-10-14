@@ -1,7 +1,7 @@
+"""Methods for sending requests directly to Slack."""
+
 import requests
 import keys
-
-from crossbot.models import CBUser
 
 SLACK_URL = 'https://slack.com/api/'
 
@@ -23,8 +23,8 @@ def _slack_api_ok(endpoint, method, key, **kwargs):
     resp = _slack_api(endpoint, method, **kwargs).json()
     if resp.get('ok'):
         return resp[key]
-    else:
-        raise ValueError('bad response: ' + resp.get('error'))
+
+    raise ValueError('bad response: ' + resp.get('error'))
 
 def slack_users():
     return _slack_api_ok('users.list', 'GET', 'members')

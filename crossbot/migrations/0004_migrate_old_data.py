@@ -1,8 +1,23 @@
 from django.conf import settings
 from django.db import migrations
+from django.utils.dateparse import parse_datetime
+from django.utils.timezone import is_aware, make_aware, override
 
 TIME_MODELS = ['CrosswordTime', 'MiniCrosswordTime', 'EasySudokuTime']
 
+def convert_timestamp(timestamp):
+    """Convenience method to convert (possible naive) timestamps."""
+    if timestamp is None:
+        return None
+
+    if isinstance(timestamp, str):
+        timestamp = parse_datetime(timestamp)
+
+    with override('America/Los_Angeles'):
+        if not is_aware(timestamp):
+            timestamp = make_aware(timestamp)
+
+    return timestamp
 
 def make_users(apps, schema_editor):
     CBUser = apps.get_model('crossbot', 'CBUser')
@@ -20,7 +35,7 @@ def transfer_times(apps, schema_editor):
                 user=CBUser.objects.get(slackid=item.userid),
                 seconds=item.seconds,
                 date=item.date,
-                timestamp=item.timestamp,
+                timestamp=convert_timestamp(item.timestamp),
             ).save()
 
 def transfer_queries(apps, schema_editor):
@@ -31,7 +46,7 @@ def transfer_queries(apps, schema_editor):
             user=CBUser.objects.get(pk=item.userid),
             name=item.name,
             command=item.command,
-            timestamp=item.timestamp,
+            timestamp=convert_timestamp(item.timestamp),
         ).save()
 
 

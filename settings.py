@@ -162,6 +162,7 @@ USE_L10N = True
 
 USE_TZ = True
 
+
 # Cause naive datetimes to trigger exceptions
 warnings.filterwarnings(
     'error', r"DateTimeField .* received a naive datetime",
