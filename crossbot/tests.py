@@ -106,8 +106,8 @@ class SlackTestCase(MockedRequestTestCase):
         ).hexdigest()
         return slash_command(request)
 
-    def slack_post(self, text, who='alice', expected_status_code = 200, expected_response_type='ephemeral'):
-
+    def slack_post(self, text, who='alice', expected_status_code=200,
+                   expected_response_type='ephemeral'):
         response = self.post_valid_request({
             'type': 'event_callback',
             'text': text,
@@ -217,3 +217,14 @@ class SlackAppTests(SlackTestCase):
         # line 0 is date, line 1 should be alice
         self.assertIn('alice', lines[1])
         self.assertIn(':fire:', lines[1])
+
+    def test_add_delete(self):
+        self.slack_post(text='add :23 2018-08-01')
+
+        # Make sure the delete response actually references the time
+        response = self.slack_post(text='delete 2018-08-01')
+        self.assertIn(':23', response['text'])
+
+        # Ensure the time doesn't show up in the times list
+        response = self.slack_post(text='times 2018-08-01')
+        self.assertNotIn(':23', response['text'])

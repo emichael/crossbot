@@ -1,9 +1,11 @@
+import logging
 import re
-import sqlite3
-from datetime import datetime
-from multiprocessing import Pool, TimeoutError
 
-from . import sql, models, DB_PATH
+from . import sql, models
+
+
+logger = logging.getLogger(__name__)
+
 
 def init(client):
     parser = client.parser.subparsers.add_parser('query', help='Run a saved query')
@@ -22,63 +24,50 @@ def init(client):
     parser.add_argument(
         'params',
         nargs='*',
-        help='Parameters for the stored query or, if saving, the query itself, with question marks for parameters'
+        help='Parameters for the stored query or, if saving, the query itself, '
+             'with question marks for parameters'
     )
 
 
-date_regex = re.compile(r'((\d\d\d\d)-(\d\d)-(\d\d))')
+DATE_REGEX = re.compile(r'((\d\d\d\d)-(\d\d)-(\d\d))')
 
 
 def linkify_dates(s):
-    return date_regex.sub(r'<https://www.nytimes.com/crosswords/game/mini/\2/\3/\4|\1>', s)
+    return DATE_REGEX.sub(r'<https://www.nytimes.com/crosswords/game/mini/\2/\3/\4|\1>', s)
 
 
 def query(request):
-    # if request.args.save:
-    #     cmd = sql.format_sql_cmd(" ".join(request.args.params))
-    #     with sqlite3.connect(DB_PATH) as con:
-    #         query = '''
-    #         INSERT OR REPLACE INTO query_shorthands(name, command, userid, timestamp)
-    #         VALUES(?, ?, ?, ?)
-    #         '''
-    #         con.execute(query, (request.args.name, cmd, request.userid, datetime.now()))
-    #     request.reply("Saved new query `{}` from {}".format(request.args.name, client.user(request.userid)))
-    if request.args.name:
-        params = [sql.format_sql_cmd(param) for param in request.args.params]
-        result = models.QueryShorthands.objects.get(name=request.args.name)
-        print(result)
-        if result:
-            cmd = sql.format_sql_cmd(result.command)
-            try:
-                with Pool() as pool:
-                    print(cmd)
-                    result = pool.apply_async(sql.do_sql, [cmd] + params).get(1)
-            except TimeoutError:
-                result = "you cant dos me even with saved queries, incident reported"
+    args = request.args
 
-            # result = sql.format_sql_result(result, client)
-            result = linkify_dates(result)
-            request.reply(result)
-        else:
-            request.reply("No known command `{}`".format(request.args.name))
+    if args.save:
+        if not args.name:
+            request.reply("Cannot save a command without a name.")
+            return
+
+        models.QueryShorthand.objects.update_or_create(
+            name=args.name,
+            defaults={
+                'user': request.user,
+                'command': ' '.join(args.params),
+            }
+        )
+
+        request.reply("Saved new query `{}` from {}".format(
+            request.args.name, request.user))
+        return
+
+    if args.name:
+        q = models.QueryShorthand.from_name(args.name)
+        if not q:
+            request.reply("Could not find saved query `{}`".format(args.name))
+            return
+        request.reply(sql.run_sql_command(q.command, args.params))
+        return
+
+    # Finally, just echo the list of all queries
+    msgs = '\n\n'.join(models.QueryShorthand.objects.all())
+    if msgs:
+        request.reply(msgs)
     else:
-        with sqlite3.connect(DB_PATH) as con:
-            queries = con.execute('''
-            SELECT name, userid, timestamp, command FROM query_shorthands
-            ''').fetchall()
-
-        msgs = []
-        for (name, userid, timestamp, command) in queries:
-            n_args = command.count('?')
-            if n_args:
-                maybe_s = '' if n_args == 1 else 's'
-                args = ' (takes {} arg{})'.format(n_args, maybe_s)
-            else:
-                args = ''
-            msg = '*{}* by {}{}:\n {}'.format(name, client.user(userid), args, command)
-            msgs.append(msg)
-
-        if msgs:
-            request.reply('\n\n'.join(msgs))
-        else:
-            request.reply('There are no saved messages yet... make one with `query --save ...`!')
+        request.reply("There are no saved messages yet... "
+                      "make one with `query --save ...`!")

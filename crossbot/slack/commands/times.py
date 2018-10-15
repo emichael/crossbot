@@ -27,9 +27,7 @@ def times(request):
 
     day_of_week = timezone.now().weekday()
 
-    times = args.table.objects.filter(date=args.date).order_by('seconds')
-
-    for item in times:
+    for item in args.table.times_for_date(args.date).order_by('seconds'):
         name = str(item.user)
         if item.seconds < 0:
             failures += ':facepalm: - {}\n'.format(name)

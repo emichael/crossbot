@@ -106,8 +106,7 @@ class CBUser(models.Model):
 
         time = time_model.objects.create(user=self,
                                          date=date,
-                                         seconds=seconds,
-                                         timestamp=timezone.now())
+                                         seconds=seconds)
         return (True, time)
 
     def remove_time(self, time_model, date):
@@ -116,13 +115,26 @@ class CBUser(models.Model):
         Args:
             time_model: Reference to the subclass of CommonTime to remove.
             date: The date of the puzzle.
+
+        Returns:
+            A str representing the deleted time or None.
         """
         assert issubclass(time_model, CommonTime)
         assert isinstance(date, datetime.date)
 
         time = self.get_time(time_model, date)
         if time:
+            time_str = str(time)
             time.delete()
+            return time_str
+
+        return None
+
+    def times(self, time_model):
+        """Returns a QuerySet with times this user has completed."""
+        assert issubclass(time_model, CommonTime)
+
+        return time_model.objects.filter(user=self)
 
     def streaks(self, time_model, date):
         """Returns the full, forwards, and backwards streaks the user is on.
@@ -136,7 +148,7 @@ class CBUser(models.Model):
         """
 
         dates_completed = set(
-            time_model.objects.filter(user=self).values_list('date', flat=True))
+            self.times(time_model).values_list('date', flat=True))
 
         # calculate the backwards streak
         check_date = copy(date) # why is this copied? Does -= change value?
@@ -208,7 +220,7 @@ class CommonTime(models.Model):
 
     @classmethod
     def times_for_date(cls, date):
-        """Return a query set with all non-null times for a date."""
+        """Return a query set with all times for a date."""
         return cls.objects.filter(date=date)
 
     def is_fail(self):
@@ -294,10 +306,29 @@ class ModelParams(models.Model):
 
 
 class QueryShorthand(models.Model):
+    name = models.CharField(max_length=100, primary_key=True)
     user = models.ForeignKey(CBUser, null=True, on_delete=models.SET_NULL)
-    name = models.CharField(max_length=100)
     command = models.TextField()
-    timestamp = models.DateTimeField(null=True)
+    timestamp = models.DateTimeField(null=True, auto_now_add=True)
+
+    @classmethod
+    def from_name(cls, name):
+        try:
+            return cls.objects.get(name=name)
+        except cls.DoesNotExist:
+            return None
+
+    def num_args(self):
+        return self.command.count('?')
 
     def __str__(self):
-        return '{} - {}'.format(self.name, self.user)
+        nargs = self.num_args()
+        if nargs:
+            arg_str = ' (takes {} arg{})'.format(nargs, '' if nargs == 1 else 's')
+        else:
+            arg_str = ''
+
+        # return '{} - {}'.format(self.name, self.user)
+
+        return '*{}* by {}{}:\n {}'.format(
+            self.name, self.user, arg_str, self.command)

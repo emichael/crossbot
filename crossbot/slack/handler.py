@@ -5,6 +5,7 @@ from . import commands
 from .commands import COMMANDS
 from .parser import Parser
 from .api import *
+from ..models import CBUser
 
 
 logger = logging.getLogger(__name__)
