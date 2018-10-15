@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 def init(client):
-
     parser = client.parser.subparsers.add_parser('add', help='Add a time.')
     parser.set_defaults(command=add)
 

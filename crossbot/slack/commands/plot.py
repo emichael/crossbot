@@ -2,11 +2,12 @@
 import datetime
 import sqlite3
 import statistics
-import numpy as np
 
 from collections import defaultdict, namedtuple
 from itertools import cycle, groupby, count
 from tempfile import NamedTemporaryFile
+
+import numpy as np
 
 # don't use matplotlib gui
 import matplotlib
@@ -19,7 +20,6 @@ from . import parse_date, date_fmt, DB_PATH
 
 
 def init(client):
-
     parser = client.parser.subparsers.add_parser('plot', help='plot something')
     parser.set_defaults(
         command   = plot,
@@ -30,8 +30,8 @@ def init(client):
         score_function = get_normalized_scores,
     )
 
-    ptype = parser.add_argument_group('Plot type')\
-                    .add_mutually_exclusive_group()
+    ptype = (parser.add_argument_group('Plot type')
+             .add_mutually_exclusive_group())
 
     ptype.add_argument(
         '--times',
