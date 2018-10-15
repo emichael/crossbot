@@ -219,6 +219,10 @@ class CommonTime(models.Model):
     timestamp = models.DateTimeField(null=True, auto_now_add=True)
 
     @classmethod
+    def all_times(cls):
+        return cls.objects.all()
+
+    @classmethod
     def times_for_date(cls, date):
         """Return a query set with all times for a date."""
         return cls.objects.filter(date=date)
