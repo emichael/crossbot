@@ -5,10 +5,13 @@ import logging
 
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
+from django.core.serializers import serialize
 
 import keys
 
 from .slack import handle_slash_command
+from .models import MiniCrosswordTime
 
 logger = logging.getLogger(__name__)
 
@@ -72,3 +75,12 @@ def slash_command(request):
         return HttpResponse('OK: ' + request.POST['text'])
 
     return HttpResponse('this is the slack endpoint')
+
+
+def rest_api(request):
+    return HttpResponse(serialize('json', MiniCrosswordTime.objects.select_related('user').all()), content_type='application/json')
+
+
+def index(request):
+    context = {}
+    return render(request, 'index.html', context)

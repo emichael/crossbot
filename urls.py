@@ -26,6 +26,5 @@ def index(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('slack/', include('crossbot.urls')),
-    path('', index),
+    path('', include('crossbot.urls')),
 ]
