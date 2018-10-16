@@ -26,7 +26,7 @@ keys.py
 uploaded_files
 
 # django stuff
-static
+/static
 venv
 
 # sublime stuff
